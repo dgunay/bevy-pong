@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use bevy::{
-    prelude::{Bundle, Color, Component, Transform, Vec3},
+    prelude::{Bundle, Color, Component, Transform, Vec2, Vec3},
     sprite::{Sprite, SpriteBundle},
 };
 
@@ -26,6 +26,11 @@ impl PaddleBundle {
             controls,
             ..Default::default()
         }
+    }
+
+    pub fn with_position(mut self, pos: Vec2) -> Self {
+        self.sprite.transform.translation = (pos, 0.0).into();
+        self
     }
 }
 

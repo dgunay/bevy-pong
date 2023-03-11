@@ -7,6 +7,7 @@ use systems::LogSamplingTimer;
 
 mod entity;
 mod systems;
+mod tests;
 
 pub struct PongPlugin;
 

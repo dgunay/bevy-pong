@@ -5,7 +5,7 @@ use bevy::{
         info, Camera2dBundle, Commands, Entity, Input, KeyCode, Query, Res, ResMut, Resource,
         Transform, Vec2, Vec3, With, Without,
     },
-    sprite::collide_aabb::collide,
+    sprite::collide_aabb::{collide, Collision},
     time::{Time, Timer},
 };
 
@@ -16,14 +16,17 @@ use crate::entity::{
     PaddleBundle,
 };
 
+const TIME_STEP: f32 = 1.0 / 60.0;
+
 pub fn spawn_paddles(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 
+    // TODO: don't hardcode the starting positions
     // Left player
-    commands.spawn(PaddleBundle::new(controls::wasd()));
+    commands.spawn(PaddleBundle::new(controls::wasd()).with_position(Vec2::new(-100.0, 0.0)));
 
     // Right player
-    commands.spawn(PaddleBundle::new(controls::arrow_keys()));
+    commands.spawn(PaddleBundle::new(controls::arrow_keys()).with_position(Vec2::new(100.0, 0.0)));
 }
 
 pub fn spawn_ball(mut commands: Commands) {
@@ -54,7 +57,7 @@ pub fn move_paddles(
         // info!("Player {:?}: {:?}", id, transform);
         keys.get_pressed().for_each(|k| {
             if let Some(new_pos) = controls.calculate_new_pos(*k, transform.as_ref()) {
-                info!("Moving {:?} to {:?}", id, new_pos);
+                // info!("Moving {:?} to {:?}", id, new_pos);
                 transform.translation = new_pos;
             }
         });
@@ -62,15 +65,20 @@ pub fn move_paddles(
 }
 
 pub fn move_ball(
-    time: Res<Time>,
     // TODO: rather than using Without<Collider>, we should add a component that
     // identifies the ent as the ball
-    mut ball_query: Query<(&mut Transform, &ball::Velocity), Without<Collider>>,
+    mut ball_query: Query<(&mut Transform, &mut ball::Velocity), Without<Collider>>,
     collider_query: Query<(Entity, &Transform), With<Collider>>,
 ) {
-    let delta = time.delta_seconds();
-    let (mut ball_tf, ball_vel) = ball_query.single_mut();
+    let (mut ball_tf, mut ball_vel) = ball_query.single_mut();
     let ball_size = ball_tf.scale.truncate();
+
+    let new_pos = ball_tf
+        .translation
+        .add(ball_vel.x * TIME_STEP)
+        .add(ball_vel.y * TIME_STEP);
+
+    ball_tf.translation = new_pos;
 
     for (_, collider_tf) in &collider_query {
         if let Some(collision) = collide(
@@ -79,15 +87,61 @@ pub fn move_ball(
             collider_tf.translation,
             collider_tf.scale.truncate(),
         ) {
-            info!("Collision between {:?} and {:?}", ball_tf, collider_tf);
-            info!("Collision: {:?}", collision);
+            info!(
+                "Collision between {:?} and {:?}: {:?}",
+                ball_tf, collider_tf, collision
+            );
+
+            let mut reflect_x = false;
+            let mut reflect_y = false;
+
+            match collision {
+                Collision::Left => reflect_x = ball_vel.x > 0.0,
+                Collision::Right => reflect_x = ball_vel.x < 0.0,
+                Collision::Top => reflect_y = ball_vel.y < 0.0,
+                Collision::Bottom => reflect_y = ball_vel.y > 0.0,
+                Collision::Inside => { /* */ }
+            }
+
+            if reflect_x {
+                ball_vel.x = -ball_vel.x;
+            }
+
+            if reflect_y {
+                ball_vel.y = -ball_vel.y;
+            }
         }
     }
+}
 
-    let new_pos = ball_tf
-        .translation
-        .add(ball_vel.x * delta)
-        .add(ball_vel.y * delta);
+#[cfg(test)]
+mod test {
+    use crate::tests::helpers::{default_setup_graphics, Test};
 
-    ball_tf.translation = new_pos;
+    #[test]
+    fn ball_paddle_collision_test() {
+        use super::*;
+
+        Test {
+            setup: |app| {
+                app.add_system(move_ball);
+                app.world
+                    .spawn(PaddleBundle::default().with_position(Vec2::new(10.0, 0.0)));
+                app.world
+                    .spawn(ball::Bundle::default().with_velocity(Vec2::new(5.0, 0.0)))
+                    .id()
+            },
+            setup_graphics: default_setup_graphics,
+            frames: 5,
+            check: |app, ball_id| {
+                let ball_tf = app.world.get::<Transform>(ball_id).unwrap();
+                let ball_vel = app.world.get::<ball::Velocity>(ball_id).unwrap();
+
+                assert_eq!(ball_tf.translation, Vec3::new(15.0, 0.0, 0.0));
+                assert_eq!(ball_vel.x, -5.0);
+                assert_eq!(ball_vel.y, 0.0);
+            },
+        }
+        .run();
+    }
 }

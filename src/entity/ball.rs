@@ -21,10 +21,22 @@ pub struct Bundle {
     /// Controls the look of the ball.
     circle: ShapeBundle,
     fill: Fill,
-    velocity: Velocity,
+    pub velocity: Velocity,
 }
 
 const BALL_SCALE: Vec3 = Vec3::new(15.0, 15.0, 15.0);
+
+impl Bundle {
+    pub fn with_velocity(mut self, velocity: Vec2) -> Self {
+        self.velocity = velocity.into();
+        self
+    }
+
+    pub fn with_position(mut self, pos: Vec2) -> Self {
+        self.circle.transform.translation = (pos, 0.0).into();
+        self
+    }
+}
 
 impl Default for Bundle {
     fn default() -> Self {
@@ -39,7 +51,7 @@ impl Default for Bundle {
                 ..Default::default()
             },
             fill: Fill::color(Color::WHITE),
-            velocity: Vec2::new(5.0, 5.0).into(),
+            velocity: Vec2::new(25.0, 5.0).into(),
         }
     }
 }
