@@ -1,15 +1,17 @@
 use std::ops::Add;
 
 use bevy::{
-    ecs::query,
     prelude::{
-        debug, info, Camera2dBundle, Color, Commands, Entity, Input, KeyCode, Query, Res, ResMut,
-        Resource, Transform, Vec3, With,
+        info, Camera2dBundle, Commands, Entity, Input, KeyCode, Query, Res, ResMut, Resource,
+        Transform, Vec2, Vec3, With, Without,
     },
+    sprite::collide_aabb::collide,
     time::{Time, Timer},
 };
 
 use crate::entity::{
+    ball,
+    collider::Collider,
     controls::{self, KeyboardControls},
     PaddleBundle,
 };
@@ -22,6 +24,10 @@ pub fn spawn_paddles(mut commands: Commands) {
 
     // Right player
     commands.spawn(PaddleBundle::new(controls::arrow_keys()));
+}
+
+pub fn spawn_ball(mut commands: Commands) {
+    commands.spawn(ball::Bundle::default());
 }
 
 #[derive(Resource)]
@@ -53,4 +59,35 @@ pub fn move_paddles(
             }
         });
     });
+}
+
+pub fn move_ball(
+    time: Res<Time>,
+    // TODO: rather than using Without<Collider>, we should add a component that
+    // identifies the ent as the ball
+    mut ball_query: Query<(&mut Transform, &ball::Velocity), Without<Collider>>,
+    collider_query: Query<(Entity, &Transform), With<Collider>>,
+) {
+    let delta = time.delta_seconds();
+    let (mut ball_tf, ball_vel) = ball_query.single_mut();
+    let ball_size = ball_tf.scale.truncate();
+
+    for (_, collider_tf) in &collider_query {
+        if let Some(collision) = collide(
+            ball_tf.translation,
+            ball_size,
+            collider_tf.translation,
+            collider_tf.scale.truncate(),
+        ) {
+            info!("Collision between {:?} and {:?}", ball_tf, collider_tf);
+            info!("Collision: {:?}", collision);
+        }
+    }
+
+    let new_pos = ball_tf
+        .translation
+        .add(ball_vel.x * delta)
+        .add(ball_vel.y * delta);
+
+    ball_tf.translation = new_pos;
 }

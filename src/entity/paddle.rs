@@ -5,7 +5,7 @@ use bevy::{
     sprite::{Sprite, SpriteBundle},
 };
 
-use super::controls::KeyboardControls;
+use super::{collider::Collider, controls::KeyboardControls};
 
 #[derive(Clone, Bundle)]
 pub struct PaddleBundle {
@@ -16,6 +16,8 @@ pub struct PaddleBundle {
     /// Defines the input controls for the paddle. Used to segregate controls
     /// per player.
     controls: KeyboardControls,
+
+    collider: Collider,
 }
 
 impl PaddleBundle {
@@ -45,6 +47,7 @@ impl Default for PaddleBundle {
                 ..Default::default()
             },
             controls: KeyboardControls::default(),
+            collider: Collider::default(),
         }
     }
 }

@@ -1,5 +1,6 @@
+pub mod ball;
+pub mod collider;
 pub mod controls;
 mod paddle;
-pub mod position;
 
 pub use paddle::PaddleBundle;
