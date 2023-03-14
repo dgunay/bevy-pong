@@ -2,12 +2,13 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use bevy::{
     prelude::{Bundle, Color, Component, Transform, Vec2, Vec3},
+    reflect::Reflect,
     sprite::{Sprite, SpriteBundle},
 };
 
 use super::{collider::Collider, controls::KeyboardControls};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Reflect)]
 pub enum Side {
     Left,
     Right,
@@ -28,7 +29,7 @@ impl Default for Side {
     }
 }
 
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Reflect)]
 pub struct Player {
     pub score: u64,
     pub side: Side,

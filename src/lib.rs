@@ -1,5 +1,7 @@
 use bevy::{
-    prelude::{App, ClearColor, Color, IntoSystemConfig, Msaa, Plugin},
+    prelude::{
+        App, AppTypeRegistry, ClearColor, Color, IntoSystemConfig, Msaa, Plugin, Res, ResMut,
+    },
     time::{Timer, TimerMode},
 };
 use bevy_prototype_lyon::prelude::ShapePlugin;
@@ -31,6 +33,8 @@ impl Plugin for PongPlugin {
             .add_system(systems::collide_ball.after(systems::apply_ball_velocity))
             .add_system(systems::detect_score)
             .add_system(systems::handle_score_event.after(systems::detect_score))
+            .register_type::<entity::paddle::Player>()
+            .register_type::<entity::bounding_box::BoundingBox>()
             .add_system(systems::log_game_state);
     }
 }

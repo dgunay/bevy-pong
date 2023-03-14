@@ -57,13 +57,15 @@ pub fn spawn_score_zones(mut commands: Commands) {
         bounding_box::Bundle::default()
             .with_visibility(bevy::prelude::Visibility::Visible)
             .with_dimensions(25.0, 500.0)
-            .with_position(Vec2::new(-250.0, 0.0)),
+            .with_position(Vec2::new(-250.0, 0.0))
+            .on_side(Side::Left),
     );
     commands.spawn(
         bounding_box::Bundle::default()
             .with_visibility(bevy::prelude::Visibility::Visible)
             .with_dimensions(25.0, 500.0)
-            .with_position(Vec2::new(250.0, 0.0)),
+            .with_position(Vec2::new(250.0, 0.0))
+            .on_side(Side::Right),
     );
 }
 
@@ -168,7 +170,7 @@ pub fn handle_score_event(
     mut ev_score: EventReader<score::Event>,
     mut set: ParamSet<(
         Query<(&mut Transform, &ball::Velocity), With<Ball>>,
-        Query<(&mut Transform, &Player)>,
+        Query<(&mut Transform, &mut Player)>,
     )>,
 ) {
     if let Some(ev) = ev_score.iter().next() {
@@ -178,8 +180,10 @@ pub fn handle_score_event(
         set.p0().get_single_mut().unwrap().0.translation =
             (ball::BALL_DEFAULT_STARTING_POSITION, 0.0).into();
 
-        for (mut tf, player) in set.p1().iter_mut() {
+        for (mut tf, mut player) in set.p1().iter_mut() {
             tf.translation = (player.starting_pos, 0.0).into();
+
+            ev.player_side.eq(&player.side).then(|| player.score += 1);
         }
     }
 

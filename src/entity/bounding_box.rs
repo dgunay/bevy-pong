@@ -3,6 +3,7 @@ use bevy::{
         Bundle as BevyBundle, Color, Component as BevyComponent, Handle, Material, Transform, Vec2,
         Visibility,
     },
+    reflect::Reflect,
     sprite::{collide_aabb::collide, ColorMaterial, MaterialMesh2dBundle, Sprite, SpriteBundle},
 };
 
@@ -20,7 +21,7 @@ pub struct Bundle {
     pub bounding_box: BoundingBox,
 }
 
-#[derive(BevyComponent, Clone, Debug, Default)]
+#[derive(BevyComponent, Clone, Debug, Default, Reflect)]
 pub struct BoundingBox {
     // TODO: probably better to just associate each player with a score zone instead,
     // to make it queryable.
@@ -40,6 +41,11 @@ impl Bundle {
 
     pub fn with_position(mut self, pos: Vec2) -> Self {
         self.sprite.transform.translation = (pos, 0.0).into();
+        self
+    }
+
+    pub fn on_side(mut self, side: Side) -> Self {
+        self.bounding_box.side = side;
         self
     }
 }
