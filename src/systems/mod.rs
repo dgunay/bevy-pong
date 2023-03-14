@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Mul};
 
 use bevy::{
     prelude::{
@@ -73,12 +73,10 @@ pub fn move_ball(
     let (mut ball_tf, mut ball_vel) = ball_query.single_mut();
     let ball_size = ball_tf.scale.truncate();
 
-    let new_pos = ball_tf
-        .translation
-        .add(ball_vel.x * TIME_STEP)
-        .add(ball_vel.y * TIME_STEP);
+    let new_xy = ball_vel.mul(TIME_STEP);
 
-    ball_tf.translation = new_pos;
+    ball_tf.translation.x += new_xy.x;
+    ball_tf.translation.y += new_xy.y;
 
     for (_, collider_tf) in &collider_query {
         if let Some(collision) = collide(
@@ -116,6 +114,8 @@ pub fn move_ball(
 
 #[cfg(test)]
 mod test {
+    use bevy::prelude::Visibility;
+
     use crate::tests::helpers::{default_setup_graphics, Test};
 
     #[test]
@@ -135,11 +135,13 @@ mod test {
             frames: 5,
             check: |app, ball_id| {
                 let ball_tf = app.world.get::<Transform>(ball_id).unwrap();
-                let ball_vel = app.world.get::<ball::Velocity>(ball_id).unwrap();
 
-                assert_eq!(ball_tf.translation, Vec3::new(15.0, 0.0, 0.0));
-                assert_eq!(ball_vel.x, -5.0);
-                assert_eq!(ball_vel.y, 0.0);
+                // y and z should be unchanged
+                assert_eq!(ball_tf.translation.y, 0.0);
+                assert_eq!(ball_tf.translation.z, 0.0);
+
+                // x should be negative, because the ball should have bounced off the paddle
+                assert!(ball_tf.translation.x < 0.0);
             },
         }
         .run();

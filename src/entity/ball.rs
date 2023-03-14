@@ -51,7 +51,7 @@ impl Default for Bundle {
                 ..Default::default()
             },
             fill: Fill::color(Color::WHITE),
-            velocity: Vec2::new(25.0, 5.0).into(),
+            velocity: Vec2::new(-25.0, 5.0).into(),
         }
     }
 }
