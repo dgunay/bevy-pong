@@ -17,7 +17,7 @@ impl Plugin for PongPlugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(systems::spawn_paddles)
             .add_startup_system(systems::spawn_ball)
-            .add_startup_system(systems::spawn_edges)
+            .add_startup_system(systems::spawn_score_zones)
             .add_event::<score::Event>()
             .insert_resource(Msaa::Sample4)
             .add_plugin(ShapePlugin)
@@ -30,6 +30,7 @@ impl Plugin for PongPlugin {
             .add_system(systems::apply_ball_velocity)
             .add_system(systems::collide_ball.after(systems::apply_ball_velocity))
             .add_system(systems::detect_score)
+            .add_system(systems::handle_score_event.after(systems::detect_score))
             .add_system(systems::log_game_state);
     }
 }

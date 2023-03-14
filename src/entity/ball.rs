@@ -29,6 +29,7 @@ pub struct Bundle {
 }
 
 const BALL_SCALE: Vec3 = Vec3::new(15.0, 15.0, 15.0);
+pub const BALL_DEFAULT_STARTING_POSITION: Vec2 = Vec2::new(0.0, 0.0);
 
 impl Bundle {
     pub fn with_velocity(mut self, velocity: Vec2) -> Self {
@@ -48,7 +49,7 @@ impl Default for Bundle {
             circle: ShapeBundle {
                 path: GeometryBuilder::build_as(&shapes::Circle::default()),
                 transform: Transform {
-                    translation: Vec3::new(0.0, 0.0, 0.0),
+                    translation: (BALL_DEFAULT_STARTING_POSITION, 0.0).into(),
                     scale: BALL_SCALE,
                     ..Default::default()
                 },

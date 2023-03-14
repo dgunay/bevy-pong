@@ -2,8 +2,8 @@ use std::ops::{Add, Mul};
 
 use bevy::{
     prelude::{
-        info, Camera2dBundle, Commands, Entity, EventWriter, Input, KeyCode, Query, Res, ResMut,
-        Resource, Transform, Vec2, Vec3, With, Without,
+        info, Camera2dBundle, Commands, Entity, EventReader, EventWriter, Input, KeyCode, ParamSet,
+        Query, Res, ResMut, Resource, Transform, Vec2, Vec3, With, Without,
     },
     sprite::{
         collide_aabb::{collide, Collision},
@@ -26,26 +26,33 @@ use crate::{
 
 const TIME_STEP: f32 = 1.0 / 60.0;
 
+const LEFT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(-100.0, 0.0);
+const RIGHT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(100.0, 0.0);
+
 pub fn spawn_paddles(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 
     // TODO: don't hardcode the starting positions
     // Left player
-    commands.spawn(PaddleBundle::new(controls::wasd()).with_position(Vec2::new(-100.0, 0.0)));
+    commands
+        .spawn(PaddleBundle::new(controls::wasd()).with_position(LEFT_PADDLE_STARTING_POSITION));
 
     // Right player
-    commands.spawn(PaddleBundle::new(controls::arrow_keys()).with_position(Vec2::new(100.0, 0.0)));
+    commands.spawn(
+        PaddleBundle::new(controls::arrow_keys()).with_position(RIGHT_PADDLE_STARTING_POSITION),
+    );
 }
 
 pub fn spawn_ball(mut commands: Commands) {
     commands.spawn(ball::Bundle::default());
 }
 
-pub fn spawn_edges(mut commands: Commands) {
+pub fn spawn_score_zones(mut commands: Commands) {
     commands.spawn(
         bounding_box::Bundle::default()
             .with_visibility(bevy::prelude::Visibility::Visible)
-            .with_dimensions(250.0, 250.0),
+            .with_dimensions(25.0, 500.0)
+            .with_position(Vec2::new(-250.0, 0.0)),
     );
 }
 
@@ -142,10 +149,37 @@ pub fn detect_score(
 
     for (id, tf, _) in &score_zones {
         if is_inside_bounds(tf, ball_tf) {
-            info!("A score event happened");
-            // ev_score.send(score::Event::Scored(id));
+            ev_score.send(score::Event {});
         }
     }
+}
+
+pub fn handle_score_event(
+    mut commands: Commands,
+    mut ev_score: EventReader<score::Event>,
+    mut set: ParamSet<(
+        Query<(&mut Transform, &ball::Velocity), With<Ball>>,
+        Query<&mut Transform, With<KeyboardControls>>,
+    )>,
+) {
+    if let Some(ev) = ev_score.iter().next() {
+        info!("Scored {:?}", ev);
+
+        // Reset positions
+        set.p0().get_single_mut().unwrap().0.translation =
+            (ball::BALL_DEFAULT_STARTING_POSITION, 0.0).into();
+
+        if let Some(mut tf) = set.p1().iter_mut().next() {
+            tf.translation = (LEFT_PADDLE_STARTING_POSITION, 0.0).into();
+        }
+        if let Some(mut tf) = set.p1().iter_mut().next() {
+            tf.translation = (RIGHT_PADDLE_STARTING_POSITION, 0.0).into();
+        }
+
+        // TODO:
+    }
+
+    ev_score.clear();
 }
 
 #[cfg(test)]

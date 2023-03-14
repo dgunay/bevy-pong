@@ -27,6 +27,11 @@ impl Bundle {
         self.sprite.transform.scale = (Vec2::new(width, height), 0.0).into();
         self
     }
+
+    pub fn with_position(mut self, pos: Vec2) -> Self {
+        self.sprite.transform.translation = (pos, 0.0).into();
+        self
+    }
 }
 
 impl Default for Bundle {

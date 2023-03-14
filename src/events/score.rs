@@ -1,4 +1,4 @@
 use bevy::prelude::Component as BevyComponent;
 
-#[derive(BevyComponent)]
+#[derive(BevyComponent, Debug)]
 pub struct Event;
