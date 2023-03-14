@@ -2,8 +2,8 @@ use std::ops::{Add, Mul};
 
 use bevy::{
     prelude::{
-        info, Camera2dBundle, Commands, Entity, EventReader, EventWriter, Input, KeyCode, ParamSet,
-        Query, Res, ResMut, Resource, Transform, Vec2, Vec3, With, Without,
+        info, Audio, Camera2dBundle, Commands, Entity, EventReader, EventWriter, Input, KeyCode,
+        ParamSet, Query, Res, ResMut, Resource, Transform, Vec2, Vec3, With, Without,
     },
     sprite::{
         collide_aabb::{collide, Collision},
@@ -15,10 +15,12 @@ use bevy::{
 
 use crate::{
     entity::{
+        self,
         ball::{self, Ball},
-        bounding_box::{self, is_inside_bounds, is_outside_bounds},
+        bounding_box::{self, is_inside_bounds, is_outside_bounds, BoundingBox},
         collider::Collider,
         controls::{self, KeyboardControls},
+        paddle::{Player, Side},
         PaddleBundle,
     },
     events::score,
@@ -26,20 +28,23 @@ use crate::{
 
 const TIME_STEP: f32 = 1.0 / 60.0;
 
-const LEFT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(-100.0, 0.0);
-const RIGHT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(100.0, 0.0);
+const LEFT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(-100.0, 50.0);
+const RIGHT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(100.0, -50.0);
 
 pub fn spawn_paddles(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
 
     // TODO: don't hardcode the starting positions
     // Left player
-    commands
-        .spawn(PaddleBundle::new(controls::wasd()).with_position(LEFT_PADDLE_STARTING_POSITION));
+    commands.spawn(
+        PaddleBundle::new(controls::wasd(), Side::Left)
+            .with_position(LEFT_PADDLE_STARTING_POSITION),
+    );
 
     // Right player
     commands.spawn(
-        PaddleBundle::new(controls::arrow_keys()).with_position(RIGHT_PADDLE_STARTING_POSITION),
+        PaddleBundle::new(controls::arrow_keys(), Side::Right)
+            .with_position(RIGHT_PADDLE_STARTING_POSITION),
     );
 }
 
@@ -53,6 +58,12 @@ pub fn spawn_score_zones(mut commands: Commands) {
             .with_visibility(bevy::prelude::Visibility::Visible)
             .with_dimensions(25.0, 500.0)
             .with_position(Vec2::new(-250.0, 0.0)),
+    );
+    commands.spawn(
+        bounding_box::Bundle::default()
+            .with_visibility(bevy::prelude::Visibility::Visible)
+            .with_dimensions(25.0, 500.0)
+            .with_position(Vec2::new(250.0, 0.0)),
     );
 }
 
@@ -140,26 +151,24 @@ pub fn collide_ball(
 }
 
 pub fn detect_score(
-    mut commands: Commands,
     ball_query: Query<&Transform, With<Ball>>,
-    score_zones: Query<(Entity, &Transform, &bounding_box::Detector)>,
+    score_zones: Query<(&Transform, &BoundingBox), With<bounding_box::Detector>>,
     mut ev_score: EventWriter<score::Event>,
 ) {
     let ball_tf = ball_query.single();
 
-    for (id, tf, _) in &score_zones {
+    for (tf, bb) in &score_zones {
         if is_inside_bounds(tf, ball_tf) {
-            ev_score.send(score::Event {});
+            ev_score.send(score::Event::new(bb.side.opposite()));
         }
     }
 }
 
 pub fn handle_score_event(
-    mut commands: Commands,
     mut ev_score: EventReader<score::Event>,
     mut set: ParamSet<(
         Query<(&mut Transform, &ball::Velocity), With<Ball>>,
-        Query<&mut Transform, With<KeyboardControls>>,
+        Query<(&mut Transform, &Player)>,
     )>,
 ) {
     if let Some(ev) = ev_score.iter().next() {
@@ -169,14 +178,9 @@ pub fn handle_score_event(
         set.p0().get_single_mut().unwrap().0.translation =
             (ball::BALL_DEFAULT_STARTING_POSITION, 0.0).into();
 
-        if let Some(mut tf) = set.p1().iter_mut().next() {
-            tf.translation = (LEFT_PADDLE_STARTING_POSITION, 0.0).into();
+        for (mut tf, player) in set.p1().iter_mut() {
+            tf.translation = (player.starting_pos, 0.0).into();
         }
-        if let Some(mut tf) = set.p1().iter_mut().next() {
-            tf.translation = (RIGHT_PADDLE_STARTING_POSITION, 0.0).into();
-        }
-
-        // TODO:
     }
 
     ev_score.clear();

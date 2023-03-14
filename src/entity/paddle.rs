@@ -7,6 +7,54 @@ use bevy::{
 
 use super::{collider::Collider, controls::KeyboardControls};
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Side {
+    Left,
+    Right,
+}
+
+impl Side {
+    pub fn opposite(&self) -> Self {
+        match self {
+            Self::Left => Self::Right,
+            Self::Right => Self::Left,
+        }
+    }
+}
+
+impl Default for Side {
+    fn default() -> Self {
+        Self::Left
+    }
+}
+
+#[derive(Component, Clone)]
+pub struct Player {
+    pub score: u64,
+    pub side: Side,
+    pub starting_pos: Vec2,
+}
+
+impl Player {
+    pub fn new(side: Side, starting_pos: Vec2) -> Self {
+        Self {
+            score: 0,
+            side,
+            starting_pos,
+        }
+    }
+}
+
+impl Default for Player {
+    fn default() -> Self {
+        Self {
+            score: 0,
+            side: Side::Left,
+            starting_pos: Vec2::new(0.0, 0.0),
+        }
+    }
+}
+
 #[derive(Clone, Bundle)]
 pub struct PaddleBundle {
     #[bundle]
@@ -18,18 +66,22 @@ pub struct PaddleBundle {
     controls: KeyboardControls,
 
     collider: Collider,
+
+    player: Player,
 }
 
 impl PaddleBundle {
-    pub fn new(controls: KeyboardControls) -> Self {
+    pub fn new(controls: KeyboardControls, side: Side) -> Self {
         Self {
             controls,
+            player: Player::new(side, Vec2::new(0.0, 0.0)),
             ..Default::default()
         }
     }
 
     pub fn with_position(mut self, pos: Vec2) -> Self {
         self.sprite.transform.translation = (pos, 0.0).into();
+        self.player.starting_pos = pos;
         self
     }
 }
@@ -53,6 +105,7 @@ impl Default for PaddleBundle {
             },
             controls: KeyboardControls::default(),
             collider: Collider::default(),
+            player: Player::default(),
         }
     }
 }

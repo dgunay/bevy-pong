@@ -6,6 +6,8 @@ use bevy::{
     sprite::{collide_aabb::collide, ColorMaterial, MaterialMesh2dBundle, Sprite, SpriteBundle},
 };
 
+use super::paddle::Side;
+
 #[derive(BevyComponent, Clone, Default)]
 pub struct Detector;
 
@@ -15,6 +17,14 @@ pub struct Detector;
 pub struct Bundle {
     pub sprite: SpriteBundle,
     pub detector: Detector,
+    pub bounding_box: BoundingBox,
+}
+
+#[derive(BevyComponent, Clone, Debug, Default)]
+pub struct BoundingBox {
+    // TODO: probably better to just associate each player with a score zone instead,
+    // to make it queryable.
+    pub side: Side,
 }
 
 impl Bundle {
@@ -47,7 +57,7 @@ impl Default for Bundle {
 
                 ..Default::default()
             },
-
+            bounding_box: BoundingBox::default(),
             detector: Detector::default(),
         }
     }
