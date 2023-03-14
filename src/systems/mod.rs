@@ -2,18 +2,26 @@ use std::ops::{Add, Mul};
 
 use bevy::{
     prelude::{
-        info, Camera2dBundle, Commands, Entity, Input, KeyCode, Query, Res, ResMut, Resource,
-        Transform, Vec2, Vec3, With, Without,
+        info, Camera2dBundle, Commands, Entity, EventWriter, Input, KeyCode, Query, Res, ResMut,
+        Resource, Transform, Vec2, Vec3, With, Without,
     },
-    sprite::collide_aabb::{collide, Collision},
+    sprite::{
+        collide_aabb::{collide, Collision},
+        Sprite,
+    },
     time::{Time, Timer},
+    utils::default,
 };
 
-use crate::entity::{
-    ball,
-    collider::Collider,
-    controls::{self, KeyboardControls},
-    PaddleBundle,
+use crate::{
+    entity::{
+        ball::{self, Ball},
+        bounding_box::{self, is_inside_bounds, is_outside_bounds},
+        collider::Collider,
+        controls::{self, KeyboardControls},
+        PaddleBundle,
+    },
+    events::score,
 };
 
 const TIME_STEP: f32 = 1.0 / 60.0;
@@ -31,6 +39,14 @@ pub fn spawn_paddles(mut commands: Commands) {
 
 pub fn spawn_ball(mut commands: Commands) {
     commands.spawn(ball::Bundle::default());
+}
+
+pub fn spawn_edges(mut commands: Commands) {
+    commands.spawn(
+        bounding_box::Bundle::default()
+            .with_visibility(bevy::prelude::Visibility::Visible)
+            .with_dimensions(250.0, 250.0),
+    );
 }
 
 #[derive(Resource)]
@@ -64,19 +80,23 @@ pub fn move_paddles(
     });
 }
 
-pub fn move_ball(
-    // TODO: rather than using Without<Collider>, we should add a component that
-    // identifies the ent as the ball
-    mut ball_query: Query<(&mut Transform, &mut ball::Velocity), Without<Collider>>,
-    collider_query: Query<(Entity, &Transform), With<Collider>>,
+pub fn apply_ball_velocity(
+    mut ball_query: Query<(&mut Transform, &mut ball::Velocity), With<Ball>>,
 ) {
     let (mut ball_tf, mut ball_vel) = ball_query.single_mut();
-    let ball_size = ball_tf.scale.truncate();
 
     let new_xy = ball_vel.mul(TIME_STEP);
 
     ball_tf.translation.x += new_xy.x;
     ball_tf.translation.y += new_xy.y;
+}
+
+pub fn collide_ball(
+    mut ball_query: Query<(&Transform, &mut ball::Velocity), With<Ball>>,
+    collider_query: Query<(Entity, &Transform), With<Collider>>,
+) {
+    let (ball_tf, mut ball_vel) = ball_query.single_mut();
+    let ball_size = ball_tf.scale.truncate();
 
     for (_, collider_tf) in &collider_query {
         if let Some(collision) = collide(
@@ -112,10 +132,24 @@ pub fn move_ball(
     }
 }
 
+pub fn detect_score(
+    mut commands: Commands,
+    ball_query: Query<&Transform, With<Ball>>,
+    score_zones: Query<(Entity, &Transform, &bounding_box::Detector)>,
+    mut ev_score: EventWriter<score::Event>,
+) {
+    let ball_tf = ball_query.single();
+
+    for (id, tf, _) in &score_zones {
+        if is_inside_bounds(tf, ball_tf) {
+            info!("A score event happened");
+            // ev_score.send(score::Event::Scored(id));
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
-    use bevy::prelude::Visibility;
-
     use crate::tests::helpers::{default_setup_graphics, Test};
 
     #[test]
@@ -124,7 +158,7 @@ mod test {
 
         Test {
             setup: |app| {
-                app.add_system(move_ball);
+                app.add_system(collide_ball);
                 app.world
                     .spawn(PaddleBundle::default().with_position(Vec2::new(10.0, 0.0)));
                 app.world

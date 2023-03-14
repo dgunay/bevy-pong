@@ -15,6 +15,9 @@ impl From<Vec2> for Velocity {
     }
 }
 
+#[derive(Component, Default)]
+pub struct Ball;
+
 #[derive(BevyBundle)]
 pub struct Bundle {
     #[bundle]
@@ -22,6 +25,7 @@ pub struct Bundle {
     circle: ShapeBundle,
     fill: Fill,
     pub velocity: Velocity,
+    ball: Ball,
 }
 
 const BALL_SCALE: Vec3 = Vec3::new(15.0, 15.0, 15.0);
@@ -52,6 +56,7 @@ impl Default for Bundle {
             },
             fill: Fill::color(Color::WHITE),
             velocity: Vec2::new(-25.0, 5.0).into(),
+            ball: Ball::default(),
         }
     }
 }
