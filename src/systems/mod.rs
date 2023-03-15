@@ -2,9 +2,9 @@ use std::ops::Mul;
 
 use bevy::{
     prelude::{
-        error, info, Camera2dBundle, Commands, DespawnRecursiveExt, Entity, EventReader,
-        EventWriter, Input, KeyCode, ParamSet, Query, Res, ResMut, Resource, Transform, Vec2, With,
-        World,
+        debug, error, info, Camera2dBundle, Commands, DespawnRecursiveExt, Entity, EventReader,
+        EventWriter, Input, KeyCode, NextState, ParamSet, Query, Res, ResMut, Resource, Transform,
+        Vec2, With, World,
     },
     sprite::collide_aabb::{collide, Collision},
     time::{Time, Timer},
@@ -21,6 +21,7 @@ use crate::{
         PaddleBundle,
     },
     events::score,
+    states::AppState,
 };
 
 const TIME_STEP: f32 = 1.0 / 60.0;
@@ -40,7 +41,10 @@ pub fn spawn_camera(mut commands: Commands) {
 
 const WIN_SCORE: u64 = 1;
 
-pub fn player_won(players_query: Query<(Entity, &Player)>) -> bool {
+pub fn detect_win_condition(
+    players_query: Query<(Entity, &Player)>,
+    mut state: ResMut<NextState<AppState>>,
+) {
     let winners: Vec<Entity> = players_query
         .iter()
         .filter(|(_, player)| player.score >= WIN_SCORE)
@@ -51,7 +55,10 @@ pub fn player_won(players_query: Query<(Entity, &Player)>) -> bool {
         panic!("Multiple winners!");
     }
 
-    return winners.len() == 1;
+    if winners.len() == 1 {
+        info!("Winner: {:?}", winners[0]);
+        state.set(AppState::MainMenu);
+    }
 }
 
 #[derive(Resource)]
@@ -114,7 +121,7 @@ pub fn collide_ball(
             collider_tf.translation,
             collider_tf.scale.truncate(),
         ) {
-            info!(
+            debug!(
                 "Collision between {:?} and {:?}: {:?}",
                 ball_tf, collider_tf, collision
             );
