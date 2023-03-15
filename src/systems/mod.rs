@@ -3,7 +3,7 @@ use std::ops::{Add, Mul};
 use bevy::{
     prelude::{
         info, Audio, Camera2dBundle, Commands, Entity, EventReader, EventWriter, Input, KeyCode,
-        ParamSet, Query, Res, ResMut, Resource, Transform, Vec2, Vec3, With, Without,
+        ParamSet, Query, Res, ResMut, Resource, Transform, Vec2, Vec3, With, Without, World,
     },
     sprite::{
         collide_aabb::{collide, Collision},
@@ -67,6 +67,26 @@ pub fn spawn_score_zones(mut commands: Commands) {
             .with_position(Vec2::new(250.0, 0.0))
             .on_side(Side::Right),
     );
+}
+
+pub fn clear_entities(mut commands: Commands) {
+    commands.add(|w: &mut World| w.clear_entities())
+}
+
+const WIN_SCORE: u64 = 5;
+
+pub fn player_won(players_query: Query<(Entity, &Player)>) -> bool {
+    let winners: Vec<Entity> = players_query
+        .iter()
+        .filter(|(_, player)| player.score >= WIN_SCORE)
+        .map(|(id, _)| id)
+        .collect();
+
+    if winners.len() > 1 {
+        panic!("Multiple winners!");
+    }
+
+    return winners.len() == 1;
 }
 
 #[derive(Resource)]

@@ -32,9 +32,14 @@ impl Plugin for PongPlugin {
             .add_system(systems::apply_ball_velocity)
             .add_system(systems::collide_ball.after(systems::apply_ball_velocity))
             .add_system(systems::detect_score)
-            .add_system(systems::handle_score_event.after(systems::detect_score))
+            .add_system(systems::clear_entities.run_if(systems::player_won))
+            .add_system(
+                systems::handle_score_event
+                    // .after(systems::detect_score)
+                    .before(systems::player_won),
+            )
             .register_type::<entity::paddle::Player>()
-            .register_type::<entity::bounding_box::BoundingBox>()
-            .add_system(systems::log_game_state);
+            .register_type::<entity::bounding_box::BoundingBox>();
+        // .add_system(systems::log_game_state);
     }
 }
