@@ -19,8 +19,7 @@ pub struct PongPlugin;
 
 impl Plugin for PongPlugin {
     fn build(&self, app: &mut App) {
-        app
-            // .add_startup_system(systems::spawn_camera)
+        app.add_startup_system(systems::spawn_camera)
             .add_startup_system(systems::initialize_match)
             .add_event::<score::Event>()
             .insert_resource(Msaa::Sample4)
@@ -30,7 +29,9 @@ impl Plugin for PongPlugin {
                 1.0,
                 TimerMode::Repeating,
             )))
-            .add_system(systems::main_menu.run_if(systems::no_active_match))
+            .add_system(systems::setup_main_menu.run_if(systems::no_active_match))
+            .add_system(systems::teardown_main_menu.run_if(systems::has_active_match))
+            // When the game is active, we run several systems to handle game logic
             .add_systems(
                 (
                     systems::move_paddles,

@@ -10,7 +10,7 @@ pub fn initialize_match(mut commands: Commands) {
     commands
         .spawn((Game, SpatialBundle::default()))
         .with_children(|parent| {
-            parent.spawn(Camera2dBundle::default());
+            // parent.spawn(Camera2dBundle::default());
 
             // paddles
             parent.spawn(PaddleBundle::left_player());

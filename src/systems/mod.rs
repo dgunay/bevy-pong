@@ -29,8 +29,10 @@ const LEFT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(-100.0, 50.0);
 const RIGHT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(100.0, -50.0);
 
 mod game;
+mod main_menu;
 
 pub use game::*;
+pub use main_menu::*;
 
 pub fn spawn_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());

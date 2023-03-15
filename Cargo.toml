@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 bevy = "0.10.0"
 bevy-inspector-egui = "0.18.1"
+bevy_embedded_assets = "0.7.0"
 bevy_prototype_lyon = "0.8.0"
 
 # Enable a small amount of optimization in debug mode
