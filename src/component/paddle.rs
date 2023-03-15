@@ -1,12 +1,13 @@
-use std::sync::atomic::{AtomicU64, Ordering};
-
 use bevy::{
     prelude::{Bundle, Color, Component, Transform, Vec2, Vec3},
     reflect::Reflect,
     sprite::{Sprite, SpriteBundle},
 };
 
-use super::{collider::Collider, controls::KeyboardControls};
+use super::{
+    collider::Collider,
+    controls::{self, KeyboardControls},
+};
 
 #[derive(Clone, Copy, Debug, PartialEq, Reflect)]
 pub enum Side {
@@ -78,6 +79,14 @@ impl PaddleBundle {
             player: Player::new(side, Vec2::new(0.0, 0.0)),
             ..Default::default()
         }
+    }
+
+    pub fn left_player() -> Self {
+        Self::new(controls::wasd(), Side::Left)
+    }
+
+    pub fn right_player() -> Self {
+        Self::new(controls::arrow_keys(), Side::Right)
     }
 
     pub fn with_position(mut self, pos: Vec2) -> Self {

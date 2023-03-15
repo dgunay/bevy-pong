@@ -1,6 +1,6 @@
 use bevy::prelude::Component as BevyComponent;
 
-use crate::entity::paddle::Side;
+use crate::component::paddle::Side;
 
 #[derive(BevyComponent, Debug)]
 pub struct Event {

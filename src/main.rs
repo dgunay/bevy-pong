@@ -1,7 +1,4 @@
-use bevy::{
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    prelude::App,
-};
+use bevy::{diagnostic::LogDiagnosticsPlugin, prelude::App};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 fn main() {

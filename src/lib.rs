@@ -1,25 +1,27 @@
+#![allow(dead_code)]
+
 use bevy::{
-    prelude::{
-        App, AppTypeRegistry, ClearColor, Color, IntoSystemConfig, Msaa, Plugin, Res, ResMut,
-    },
+    prelude::{App, ClearColor, Color, IntoSystemConfig, IntoSystemConfigs, Msaa, Plugin},
     time::{Timer, TimerMode},
 };
 use bevy_prototype_lyon::prelude::ShapePlugin;
 use events::score;
 use systems::LogSamplingTimer;
 
-mod entity;
+mod component;
 mod events;
 mod systems;
 mod tests;
+
+pub mod constants;
 
 pub struct PongPlugin;
 
 impl Plugin for PongPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(systems::spawn_paddles)
-            .add_startup_system(systems::spawn_ball)
-            .add_startup_system(systems::spawn_score_zones)
+        app
+            // .add_startup_system(systems::spawn_camera)
+            .add_startup_system(systems::initialize_match)
             .add_event::<score::Event>()
             .insert_resource(Msaa::Sample4)
             .add_plugin(ShapePlugin)
@@ -28,18 +30,20 @@ impl Plugin for PongPlugin {
                 1.0,
                 TimerMode::Repeating,
             )))
-            .add_system(systems::move_paddles)
-            .add_system(systems::apply_ball_velocity)
-            .add_system(systems::collide_ball.after(systems::apply_ball_velocity))
-            .add_system(systems::detect_score)
-            .add_system(systems::clear_entities.run_if(systems::player_won))
-            .add_system(
-                systems::handle_score_event
-                    // .after(systems::detect_score)
-                    .before(systems::player_won),
+            .add_system(systems::main_menu.run_if(systems::no_active_match))
+            .add_systems(
+                (
+                    systems::move_paddles,
+                    systems::apply_ball_velocity,
+                    systems::collide_ball.after(systems::apply_ball_velocity),
+                    systems::detect_score,
+                    systems::clear_active_match.run_if(systems::player_won),
+                    systems::handle_score_event.before(systems::player_won),
+                )
+                    .distributive_run_if(systems::has_active_match),
             )
-            .register_type::<entity::paddle::Player>()
-            .register_type::<entity::bounding_box::BoundingBox>();
+            .register_type::<component::paddle::Player>()
+            .register_type::<component::bounding_box::BoundingBox>();
         // .add_system(systems::log_game_state);
     }
 }

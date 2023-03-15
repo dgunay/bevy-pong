@@ -1,10 +1,9 @@
 use bevy::{
     prelude::{
-        Bundle as BevyBundle, Color, Component as BevyComponent, Handle, Material, Transform, Vec2,
-        Visibility,
+        Bundle as BevyBundle, Color, Component as BevyComponent, Transform, Vec2, Visibility,
     },
     reflect::Reflect,
-    sprite::{collide_aabb::collide, ColorMaterial, MaterialMesh2dBundle, Sprite, SpriteBundle},
+    sprite::{collide_aabb::collide, Sprite, SpriteBundle},
 };
 
 use super::paddle::Side;

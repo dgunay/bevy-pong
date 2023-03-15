@@ -1,25 +1,22 @@
-use std::ops::{Add, Mul};
+use std::ops::Mul;
 
 use bevy::{
     prelude::{
-        info, Audio, Camera2dBundle, Commands, Entity, EventReader, EventWriter, Input, KeyCode,
-        ParamSet, Query, Res, ResMut, Resource, Transform, Vec2, Vec3, With, Without, World,
+        error, info, Camera2dBundle, Commands, DespawnRecursiveExt, Entity, EventReader,
+        EventWriter, Input, KeyCode, ParamSet, Query, Res, ResMut, Resource, Transform, Vec2, With,
+        World,
     },
-    sprite::{
-        collide_aabb::{collide, Collision},
-        Sprite,
-    },
+    sprite::collide_aabb::{collide, Collision},
     time::{Time, Timer},
-    utils::default,
 };
 
 use crate::{
-    entity::{
-        self,
+    component::{
         ball::{self, Ball},
-        bounding_box::{self, is_inside_bounds, is_outside_bounds, BoundingBox},
+        bounding_box::{self, is_inside_bounds, BoundingBox},
         collider::Collider,
         controls::{self, KeyboardControls},
+        game::Game,
         paddle::{Player, Side},
         PaddleBundle,
     },
@@ -31,49 +28,15 @@ const TIME_STEP: f32 = 1.0 / 60.0;
 const LEFT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(-100.0, 50.0);
 const RIGHT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(100.0, -50.0);
 
-pub fn spawn_paddles(mut commands: Commands) {
+mod game;
+
+pub use game::*;
+
+pub fn spawn_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-
-    // TODO: don't hardcode the starting positions
-    // Left player
-    commands.spawn(
-        PaddleBundle::new(controls::wasd(), Side::Left)
-            .with_position(LEFT_PADDLE_STARTING_POSITION),
-    );
-
-    // Right player
-    commands.spawn(
-        PaddleBundle::new(controls::arrow_keys(), Side::Right)
-            .with_position(RIGHT_PADDLE_STARTING_POSITION),
-    );
 }
 
-pub fn spawn_ball(mut commands: Commands) {
-    commands.spawn(ball::Bundle::default());
-}
-
-pub fn spawn_score_zones(mut commands: Commands) {
-    commands.spawn(
-        bounding_box::Bundle::default()
-            .with_visibility(bevy::prelude::Visibility::Visible)
-            .with_dimensions(25.0, 500.0)
-            .with_position(Vec2::new(-250.0, 0.0))
-            .on_side(Side::Left),
-    );
-    commands.spawn(
-        bounding_box::Bundle::default()
-            .with_visibility(bevy::prelude::Visibility::Visible)
-            .with_dimensions(25.0, 500.0)
-            .with_position(Vec2::new(250.0, 0.0))
-            .on_side(Side::Right),
-    );
-}
-
-pub fn clear_entities(mut commands: Commands) {
-    commands.add(|w: &mut World| w.clear_entities())
-}
-
-const WIN_SCORE: u64 = 5;
+const WIN_SCORE: u64 = 1;
 
 pub fn player_won(players_query: Query<(Entity, &Player)>) -> bool {
     let winners: Vec<Entity> = players_query
@@ -109,7 +72,7 @@ pub fn move_paddles(
     mut query: Query<(&mut Transform, Entity, &KeyboardControls)>,
 ) {
     // TODO: process them by which set of controls owns the paddle
-    query.iter_mut().for_each(|(mut transform, id, controls)| {
+    query.iter_mut().for_each(|(mut transform, _id, controls)| {
         // info!("Player {:?}: {:?}", id, transform);
         keys.get_pressed().for_each(|k| {
             if let Some(new_pos) = controls.calculate_new_pos(*k, transform.as_ref()) {
@@ -123,12 +86,16 @@ pub fn move_paddles(
 pub fn apply_ball_velocity(
     mut ball_query: Query<(&mut Transform, &mut ball::Velocity), With<Ball>>,
 ) {
-    let (mut ball_tf, mut ball_vel) = ball_query.single_mut();
+    // let (mut ball_tf, ball_vel) = ball_query.get_single_mut();
+    match ball_query.get_single_mut() {
+        Ok((mut ball_tf, ball_vel)) => {
+            let new_xy = ball_vel.mul(TIME_STEP);
 
-    let new_xy = ball_vel.mul(TIME_STEP);
-
-    ball_tf.translation.x += new_xy.x;
-    ball_tf.translation.y += new_xy.y;
+            ball_tf.translation.x += new_xy.x;
+            ball_tf.translation.y += new_xy.y;
+        }
+        Err(e) => error!("ball not found, cannot apply velocity: {:?}", e),
+    };
 }
 
 pub fn collide_ball(
