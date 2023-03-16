@@ -4,7 +4,7 @@ use bevy::{
     prelude::{
         debug, error, info, Camera2dBundle, Commands, DespawnRecursiveExt, Entity, EventReader,
         EventWriter, Input, KeyCode, NextState, ParamSet, Query, Res, ResMut, Resource, Transform,
-        Vec2, With, World,
+        Vec2, With, Without, World,
     },
     sprite::collide_aabb::{collide, Collision},
     time::{Time, Timer},
@@ -18,6 +18,7 @@ use crate::{
         controls::{self, KeyboardControls},
         game::Game,
         paddle::{Player, Side},
+        wall::Wall,
         PaddleBundle,
     },
     events::score,
@@ -54,12 +55,29 @@ pub fn log_game_state(
 pub fn move_paddles(
     keys: Res<Input<KeyCode>>,
     mut query: Query<(&mut Transform, Entity, &KeyboardControls)>,
+    walls_query: Query<&Transform, (With<Wall>, With<Collider>, Without<KeyboardControls>)>,
 ) {
-    // TODO: process them by which set of controls owns the paddle
+    let walls: Vec<_> = walls_query.iter().collect();
+
     query.iter_mut().for_each(|(mut transform, _id, controls)| {
         // info!("Player {:?}: {:?}", id, transform);
         keys.get_pressed().for_each(|k| {
             if let Some(new_pos) = controls.calculate_new_pos(*k, transform.as_ref()) {
+                // if it would collide with a wall, don't move
+                if walls.iter().any(|wall| {
+                    collide(
+                        wall.translation,
+                        wall.scale.truncate(),
+                        new_pos,
+                        transform.scale.truncate(),
+                    )
+                    // We do want to allow an out if clipping occurs
+                    .filter(|c| c != &Collision::Inside)
+                    .is_some()
+                }) {
+                    return;
+                }
+
                 // info!("Moving {:?} to {:?}", id, new_pos);
                 transform.translation = new_pos;
             }

@@ -22,8 +22,6 @@ pub fn initialize_match(mut commands: Commands) {
     commands
         .spawn((Game, SpatialBundle::default()))
         .with_children(|parent| {
-            // parent.spawn(Camera2dBundle::default());
-
             // paddles
             parent.spawn(PaddleBundle::left_player().with_position(LEFT_PADDLE_STARTING_POSITION));
             parent
@@ -48,7 +46,7 @@ pub fn initialize_match(mut commands: Commands) {
                     .on_side(Side::Right),
             );
 
-            // TODO: walls and movement restrictions
+            // top and bottom walls
             parent.spawn(
                 wall::Bundle::default()
                     .with_size(TOP_WALL_SIZE.x, TOP_WALL_SIZE.y)
