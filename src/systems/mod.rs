@@ -138,7 +138,7 @@ pub fn collide_ball(
                 ball_tf, collider_tf, collision
             );
 
-            ev_writer.send(collider::Event {});
+            ev_writer.send(collider::Event::default());
 
             let mut reflect_x = false;
             let mut reflect_y = false;
