@@ -5,12 +5,15 @@ use bevy::prelude::{
 
 use crate::{
     component::{
-        ball, bounding_box, controls,
+        ball, bounding_box,
         game::Game,
         paddle::{Player, Side},
-        PaddleBundle,
+        wall, PaddleBundle,
     },
-    constants::LEFT_PADDLE_STARTING_POSITION,
+    constants::{
+        BOTTOM_WALL_POSITION, BOTTOM_WALL_SIZE, LEFT_PADDLE_STARTING_POSITION,
+        RIGHT_PADDLE_STARTING_POSITION, TOP_WALL_POSITION, TOP_WALL_SIZE, WIN_SCORE,
+    },
     states::AppState,
 };
 
@@ -23,7 +26,8 @@ pub fn initialize_match(mut commands: Commands) {
 
             // paddles
             parent.spawn(PaddleBundle::left_player().with_position(LEFT_PADDLE_STARTING_POSITION));
-            parent.spawn(PaddleBundle::right_player());
+            parent
+                .spawn(PaddleBundle::right_player().with_position(RIGHT_PADDLE_STARTING_POSITION));
 
             // ball
             parent.spawn(ball::Bundle::default());
@@ -45,6 +49,18 @@ pub fn initialize_match(mut commands: Commands) {
             );
 
             // TODO: walls and movement restrictions
+            parent.spawn(
+                wall::Bundle::default()
+                    .with_size(TOP_WALL_SIZE.x, TOP_WALL_SIZE.y)
+                    .at(TOP_WALL_POSITION)
+                    .visible(), // debug
+            );
+            parent.spawn(
+                wall::Bundle::default()
+                    .with_size(BOTTOM_WALL_SIZE.x, BOTTOM_WALL_SIZE.y)
+                    .at(BOTTOM_WALL_POSITION)
+                    .visible(), // debug
+            );
         });
 }
 
@@ -60,8 +76,6 @@ pub fn has_active_match(game_query: Query<Entity, With<Game>>) -> bool {
 pub fn no_active_match(game_query: Query<Entity, With<Game>>) -> bool {
     game_query.is_empty()
 }
-
-const WIN_SCORE: u64 = 1;
 
 pub fn detect_win_condition(
     players_query: Query<(Entity, &Player)>,

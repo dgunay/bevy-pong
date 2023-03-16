@@ -1,4 +1,5 @@
 use bevy::prelude::Component as BevyComponent;
 
-#[derive(BevyComponent, Clone, Default)]
+/// A component that indicates that an entity should be treated as collidable.
+#[derive(BevyComponent, Clone, Default, Debug)]
 pub struct Collider;
