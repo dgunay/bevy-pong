@@ -6,14 +6,7 @@ use bevy_prototype_lyon::{
     shapes,
 };
 
-#[derive(Debug, Default, Clone, Copy, Deref, DerefMut, Component)]
-pub struct Velocity(Vec2);
-
-impl From<Vec2> for Velocity {
-    fn from(v: Vec2) -> Self {
-        Self(v)
-    }
-}
+use super::velocity::Velocity;
 
 #[derive(Component, Default)]
 pub struct Ball;

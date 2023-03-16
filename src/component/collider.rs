@@ -4,6 +4,7 @@ use bevy::prelude::{Component as BevyComponent, Vec2};
 #[derive(BevyComponent, Clone, Default, Debug)]
 pub struct Collider;
 
+#[derive(Copy, Clone, Debug)]
 /// Event for when a collision happens.
 pub struct Event {
     pub intensity: f32,

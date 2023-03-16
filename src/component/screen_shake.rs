@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use bevy::{prelude::Component, time::Timer};
 
-use crate::constants;
+use crate::constants::{self, DEFAULT_SCREEN_SHAKE_DURATION};
 
 /// A component that keeps track of
 #[derive(Component)]
@@ -22,7 +22,7 @@ impl ScreenShake {
     }
 
     pub fn with_intensity(mut self, intensity: f32) -> Self {
-        self.intensity = constants::DEFAULT_SCREEN_SHAKE_INTENSITY;
+        self.intensity = intensity;
         self
     }
 
@@ -53,8 +53,20 @@ impl ScreenShake {
 impl Default for ScreenShake {
     fn default() -> Self {
         Self {
-            timer: Timer::from_seconds(0.75, bevy::time::TimerMode::Once),
+            timer: Timer::from_seconds(DEFAULT_SCREEN_SHAKE_DURATION, bevy::time::TimerMode::Once),
             intensity: constants::DEFAULT_SCREEN_SHAKE_INTENSITY,
         }
+    }
+}
+
+impl From<super::collider::Event> for ScreenShake {
+    fn from(e: super::collider::Event) -> Self {
+        let intensity_factor = e.intensity / 3.0;
+        let duration = (intensity_factor * DEFAULT_SCREEN_SHAKE_DURATION)
+            .clamp(0.2, DEFAULT_SCREEN_SHAKE_DURATION * 2.0);
+
+        ScreenShake::default()
+            .with_intensity(intensity_factor)
+            .with_duration(duration)
     }
 }

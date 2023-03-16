@@ -51,8 +51,8 @@ impl Plugin for PongPlugin {
             .add_systems(
                 (
                     systems::move_paddles,
-                    systems::apply_ball_velocity,
-                    systems::collide_ball.after(systems::apply_ball_velocity),
+                    systems::apply_velocity,
+                    systems::collide_ball.after(systems::apply_velocity),
                     systems::do_screen_shake,
                     systems::detect_score,
                     systems::handle_score_event.before(systems::detect_win_condition),

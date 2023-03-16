@@ -1,6 +1,8 @@
 use std::ops::Add;
 
-use bevy::prelude::{Component, KeyCode, Transform, Vec3};
+use bevy::prelude::{Component, KeyCode, Transform, Vec2, Vec3};
+
+use super::velocity::Velocity;
 
 // TODO: make the kind of controller (keyboard, gamepad, etc) generic
 #[derive(Debug, Clone, Copy, Component)]
@@ -20,6 +22,17 @@ impl KeyboardControls {
             k if k == self.right => Some(transform.translation.add(transform.right())),
             // else do nothing
             _ => None,
+        }
+    }
+
+    pub fn to_velocity(&self, k: KeyCode) -> Velocity {
+        match k {
+            k if k == self.up => Velocity::from(Vec2::new(0.0, 1.0)),
+            k if k == self.down => Velocity::from(Vec2::new(0.0, -1.0)),
+            k if k == self.left => Velocity::from(Vec2::new(-1.0, 0.0)),
+            k if k == self.right => Velocity::from(Vec2::new(1.0, 0.0)),
+            // else do nothing
+            _ => Velocity::default(),
         }
     }
 }

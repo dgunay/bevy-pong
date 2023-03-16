@@ -14,3 +14,4 @@ pub const BOTTOM_WALL_POSITION: Vec2 = Vec2::new(0.0, -250.0);
 
 /// How hard the screen shakes when a collision occurs.
 pub const DEFAULT_SCREEN_SHAKE_INTENSITY: f32 = 25.0;
+pub const DEFAULT_SCREEN_SHAKE_DURATION: f32 = 0.5;

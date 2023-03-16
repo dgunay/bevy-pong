@@ -7,6 +7,7 @@ use bevy::{
 use super::{
     collider::Collider,
     controls::{self, KeyboardControls},
+    velocity::Velocity,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Reflect)]
@@ -69,6 +70,8 @@ pub struct PaddleBundle {
 
     collider: Collider,
 
+    velocity: Velocity,
+
     player: Player,
 }
 
@@ -116,6 +119,7 @@ impl Default for PaddleBundle {
             controls: KeyboardControls::default(),
             collider: Collider::default(),
             player: Player::default(),
+            velocity: Velocity::default(),
         }
     }
 }

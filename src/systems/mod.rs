@@ -23,6 +23,7 @@ use crate::{
         game::Game,
         paddle::{Player, Side},
         screen_shake::ScreenShake,
+        velocity::{self, Velocity},
         wall::Wall,
         PaddleBundle,
     },
@@ -72,61 +73,58 @@ pub fn log_game_state(
 
 pub fn move_paddles(
     keys: Res<Input<KeyCode>>,
-    mut query: Query<(&mut Transform, Entity, &KeyboardControls)>,
+    mut query: Query<(&mut Transform, &mut Velocity, Entity, &KeyboardControls)>,
     walls_query: Query<&Transform, (With<Collider>, Without<KeyboardControls>)>,
 ) {
     let walls: Vec<_> = walls_query.iter().collect();
 
-    query.iter_mut().for_each(|(mut transform, _id, controls)| {
-        // info!("Player {:?}: {:?}", id, transform);
-        keys.get_pressed().for_each(|k| {
-            if let Some(new_pos) = controls.calculate_new_pos(*k, transform.as_ref()) {
-                // if it would collide with a wall, don't move
-                if walls.iter().any(|wall| {
-                    collide(
-                        wall.translation,
-                        wall.scale.truncate(),
-                        new_pos,
-                        transform.scale.truncate(),
-                    )
-                    // We do want to allow an out if clipping occurs
-                    .filter(|c| c != &Collision::Inside)
-                    .is_some()
-                }) {
-                    return;
-                }
+    query
+        .iter_mut()
+        .for_each(|(mut transform, mut vel, _id, controls)| {
+            // info!("Player {:?}: {:?}", id, transform);
+            keys.get_pressed().for_each(|k| {
+                if let Some(new_pos) = controls.calculate_new_pos(*k, transform.as_ref()) {
+                    // if it would collide with a wall, don't move
+                    if walls.iter().any(|wall| {
+                        collide(
+                            wall.translation,
+                            wall.scale.truncate(),
+                            new_pos,
+                            transform.scale.truncate(),
+                        )
+                        // We do want to allow an out if clipping occurs
+                        .filter(|c| c != &Collision::Inside)
+                        .is_some()
+                    }) {
+                        return;
+                    }
 
-                // info!("Moving {:?} to {:?}", id, new_pos);
-                transform.translation = new_pos;
-            }
+                    // info!("Moving {:?} to {:?}", id, new_pos);
+                    *vel = controls.to_velocity(*k);
+                    transform.translation = new_pos;
+                }
+            });
         });
+}
+
+pub fn apply_velocity(mut ball_query: Query<(&mut Transform, &velocity::Velocity)>) {
+    ball_query.iter_mut().for_each(|(mut tf, vel)| {
+        let new_xy = vel.mul(TIME_STEP);
+
+        tf.translation.x += new_xy.x;
+        tf.translation.y += new_xy.y;
     });
 }
 
-pub fn apply_ball_velocity(
-    mut ball_query: Query<(&mut Transform, &mut ball::Velocity), With<Ball>>,
-) {
-    // let (mut ball_tf, ball_vel) = ball_query.get_single_mut();
-    match ball_query.get_single_mut() {
-        Ok((mut ball_tf, ball_vel)) => {
-            let new_xy = ball_vel.mul(TIME_STEP);
-
-            ball_tf.translation.x += new_xy.x;
-            ball_tf.translation.y += new_xy.y;
-        }
-        Err(e) => error!("ball not found, cannot apply velocity: {:?}", e),
-    };
-}
-
 pub fn collide_ball(
-    mut ball_query: Query<(&Transform, &mut ball::Velocity), With<Ball>>,
-    collider_query: Query<(Entity, &Transform), With<Collider>>,
+    mut ball_query: Query<(&Transform, &mut Velocity), With<Ball>>,
+    collider_query: Query<(Entity, &Transform, Option<&Velocity>), (With<Collider>, Without<Ball>)>,
     mut ev_writer: EventWriter<collider::Event>,
 ) {
     let (ball_tf, mut ball_vel) = ball_query.single_mut();
     let ball_size = ball_tf.scale.truncate();
 
-    for (_, collider_tf) in &collider_query {
+    for (_, collider_tf, maybe_vel) in &collider_query {
         if let Some(collision) = collide(
             ball_tf.translation,
             ball_size,
@@ -138,7 +136,11 @@ pub fn collide_ball(
                 ball_tf, collider_tf, collision
             );
 
-            ev_writer.send(collider::Event::default());
+            if let Some(vel) = maybe_vel {
+                ev_writer.send(collider::Event::new(**vel, **ball_vel));
+            } else {
+                ev_writer.send(collider::Event::default());
+            }
 
             let mut reflect_x = false;
             let mut reflect_y = false;
@@ -179,7 +181,7 @@ pub fn detect_score(
 pub fn handle_score_event(
     mut ev_score: EventReader<score::Event>,
     mut set: ParamSet<(
-        Query<(&mut Transform, &ball::Velocity), With<Ball>>,
+        Query<(&mut Transform, &Velocity), With<Ball>>,
         Query<(&mut Transform, &mut Player)>,
     )>,
 ) {
@@ -208,9 +210,9 @@ pub fn do_screen_shake(
     mut camera_q: Query<&mut Transform, With<Camera>>,
     time: Res<Time>,
 ) {
-    if let Some(_) = collision_events.iter().next() {
+    if let Some(e) = collision_events.iter().next() {
         // Begin a screen shake
-        commands.spawn(ScreenShake::default());
+        commands.spawn(ScreenShake::from(*e));
     }
 
     shake_q.iter_mut().for_each(|(ent, mut shake)| {
