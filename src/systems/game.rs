@@ -1,9 +1,18 @@
 use bevy::prelude::{
-    BuildChildren, Camera2dBundle, Commands, DespawnRecursiveExt, Entity, Query, SpatialBundle,
-    Vec2, Visibility, With,
+    info, BuildChildren, Camera2dBundle, Commands, DespawnRecursiveExt, Entity, NextState, Query,
+    ResMut, SpatialBundle, Vec2, Visibility, With,
 };
 
-use crate::component::{ball, bounding_box, controls, game::Game, paddle::Side, PaddleBundle};
+use crate::{
+    component::{
+        ball, bounding_box, controls,
+        game::Game,
+        paddle::{Player, Side},
+        PaddleBundle,
+    },
+    constants::LEFT_PADDLE_STARTING_POSITION,
+    states::AppState,
+};
 
 pub fn initialize_match(mut commands: Commands) {
     // Create a parent Game entity to make it easier to apply setup/teardown logic
@@ -13,7 +22,7 @@ pub fn initialize_match(mut commands: Commands) {
             // parent.spawn(Camera2dBundle::default());
 
             // paddles
-            parent.spawn(PaddleBundle::left_player());
+            parent.spawn(PaddleBundle::left_player().with_position(LEFT_PADDLE_STARTING_POSITION));
             parent.spawn(PaddleBundle::right_player());
 
             // ball
@@ -50,4 +59,26 @@ pub fn has_active_match(game_query: Query<Entity, With<Game>>) -> bool {
 
 pub fn no_active_match(game_query: Query<Entity, With<Game>>) -> bool {
     game_query.is_empty()
+}
+
+const WIN_SCORE: u64 = 1;
+
+pub fn detect_win_condition(
+    players_query: Query<(Entity, &Player)>,
+    mut state: ResMut<NextState<AppState>>,
+) {
+    let winners: Vec<Entity> = players_query
+        .iter()
+        .filter(|(_, player)| player.score >= WIN_SCORE)
+        .map(|(id, _)| id)
+        .collect();
+
+    if winners.len() > 1 {
+        panic!("Multiple winners!");
+    }
+
+    if winners.len() == 1 {
+        info!("Winner: {:?}", winners[0]);
+        state.set(AppState::MainMenu);
+    }
 }

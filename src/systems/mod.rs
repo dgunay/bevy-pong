@@ -26,9 +26,6 @@ use crate::{
 
 const TIME_STEP: f32 = 1.0 / 60.0;
 
-const LEFT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(-100.0, 50.0);
-const RIGHT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(100.0, -50.0);
-
 mod game;
 mod main_menu;
 
@@ -37,28 +34,6 @@ pub use main_menu::*;
 
 pub fn spawn_camera(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-}
-
-const WIN_SCORE: u64 = 1;
-
-pub fn detect_win_condition(
-    players_query: Query<(Entity, &Player)>,
-    mut state: ResMut<NextState<AppState>>,
-) {
-    let winners: Vec<Entity> = players_query
-        .iter()
-        .filter(|(_, player)| player.score >= WIN_SCORE)
-        .map(|(id, _)| id)
-        .collect();
-
-    if winners.len() > 1 {
-        panic!("Multiple winners!");
-    }
-
-    if winners.len() == 1 {
-        info!("Winner: {:?}", winners[0]);
-        state.set(AppState::MainMenu);
-    }
 }
 
 #[derive(Resource)]
