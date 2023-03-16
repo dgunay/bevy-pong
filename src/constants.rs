@@ -12,4 +12,5 @@ pub const TOP_WALL_POSITION: Vec2 = Vec2::new(0.0, 250.0);
 pub const BOTTOM_WALL_SIZE: Vec2 = Vec2::new(500.0, 25.0);
 pub const BOTTOM_WALL_POSITION: Vec2 = Vec2::new(0.0, -250.0);
 
-pub const SCREEN_SHAKE_MULTIPLIER: f32 = 25.0;
+/// How hard the screen shakes when a collision occurs.
+pub const DEFAULT_SCREEN_SHAKE_INTENSITY: f32 = 25.0;

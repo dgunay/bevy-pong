@@ -22,10 +22,11 @@ use crate::{
         controls::{self, KeyboardControls},
         game::Game,
         paddle::{Player, Side},
+        screen_shake::ScreenShake,
         wall::Wall,
         PaddleBundle,
     },
-    constants::SCREEN_SHAKE_MULTIPLIER,
+    constants::DEFAULT_SCREEN_SHAKE_INTENSITY,
     events::score,
     states::AppState,
 };
@@ -199,54 +200,32 @@ pub fn handle_score_event(
     ev_score.clear();
 }
 
-// TODO: copypasta doc comment
-/// Say, for whatever reason, we want to keep track
-/// of when exactly some specific entities were spawned.
-#[derive(Component)]
-pub struct ScreenShakeTimer {
-    timer: Timer,
-    original_camera_pos: Vec2,
-}
-
-impl ScreenShakeTimer {
-    pub fn new(original_camera_pos: Vec2) -> Self {
-        Self {
-            timer: Timer::from_seconds(0.75, bevy::time::TimerMode::Once),
-            original_camera_pos,
-        }
-    }
-}
-
+// TODO: vary the intensity based on the relative speed of the collision
 pub fn do_screen_shake(
     mut commands: Commands,
     mut collision_events: EventReader<collider::Event>,
-    mut timer_q: Query<(Entity, &mut ScreenShakeTimer)>,
+    mut shake_q: Query<(Entity, &mut ScreenShake)>,
     mut camera_q: Query<&mut Transform, With<Camera>>,
     time: Res<Time>,
 ) {
     if let Some(_) = collision_events.iter().next() {
-        // Begin a screen shake timer
-        commands.spawn(ScreenShakeTimer::new(Vec2::ZERO));
+        // Begin a screen shake
+        commands.spawn(ScreenShake::default());
     }
 
-    // TODO: what do we do about multiple screen shakes in flight at once?
-
-    timer_q.iter_mut().for_each(|(timer_ent, mut timer)| {
+    shake_q.iter_mut().for_each(|(ent, mut shake)| {
         let mut camera_tf = camera_q.single_mut();
 
-        // Return the camera to its original position so that the screen shake
-        // remains centered
-        camera_tf.translation.x = 0.0;
-        camera_tf.translation.y = 0.0;
+        let (shake_x, shake_y) = shake.calculate();
 
-        if timer.timer.finished() {
-            commands.entity(timer_ent).despawn();
-        } else {
-            let fade = 1.0 - timer.timer.percent();
-            camera_tf.translation.x += rand::random::<f32>() * SCREEN_SHAKE_MULTIPLIER * fade;
-            camera_tf.translation.y += rand::random::<f32>() * SCREEN_SHAKE_MULTIPLIER * fade;
+        if shake.done() {
+            commands.entity(ent).despawn();
         }
-        timer.timer.tick(time.delta());
+
+        camera_tf.translation.x = shake_x;
+        camera_tf.translation.y = shake_y;
+
+        shake.tick(time.delta());
     });
 }
 
