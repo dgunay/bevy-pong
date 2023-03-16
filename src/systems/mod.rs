@@ -1,10 +1,11 @@
 use std::ops::Mul;
 
 use bevy::{
+    core_pipeline::bloom::{self, BloomSettings},
     prelude::{
-        debug, error, info, Camera2dBundle, Commands, DespawnRecursiveExt, Entity, EventReader,
-        EventWriter, Input, KeyCode, NextState, ParamSet, Query, Res, ResMut, Resource, Transform,
-        Vec2, With, Without, World,
+        debug, error, info, Camera, Camera2dBundle, Commands, DespawnRecursiveExt, Entity,
+        EventReader, EventWriter, Input, KeyCode, NextState, ParamSet, Query, Res, ResMut,
+        Resource, Transform, Vec2, With, Without, World,
     },
     sprite::collide_aabb::{collide, Collision},
     time::{Time, Timer},
@@ -34,7 +35,19 @@ pub use game::*;
 pub use main_menu::*;
 
 pub fn spawn_camera(mut commands: Commands) {
-    commands.spawn(Camera2dBundle::default());
+    let mut bloom_settings = BloomSettings::OLD_SCHOOL;
+    bloom_settings.intensity = 0.15;
+    commands.spawn((
+        Camera2dBundle {
+            camera: Camera {
+                hdr: true,
+                ..Default::default()
+            },
+            tonemapping: bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface,
+            ..Default::default()
+        },
+        bloom_settings,
+    ));
 }
 
 #[derive(Resource)]
