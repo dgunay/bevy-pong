@@ -1,27 +1,31 @@
-use std::ops::Mul;
+use std::{ops::Mul, time::Duration};
 
 use bevy::{
+    core::Zeroable,
     core_pipeline::bloom::{self, BloomSettings},
+    ecs::system::Command,
     prelude::{
-        debug, error, info, Camera, Camera2dBundle, Commands, DespawnRecursiveExt, Entity,
-        EventReader, EventWriter, Input, KeyCode, NextState, ParamSet, Query, Res, ResMut,
-        Resource, Transform, Vec2, With, Without, World,
+        debug, error, info, Camera, Camera2dBundle, Commands, Component, Deref,
+        DespawnRecursiveExt, Entity, EventReader, EventWriter, Input, KeyCode, NextState, ParamSet,
+        Query, Res, ResMut, Resource, Transform, Vec2, With, Without, World,
     },
     sprite::collide_aabb::{collide, Collision},
     time::{Time, Timer},
+    utils::Instant,
 };
 
 use crate::{
     component::{
         ball::{self, Ball},
         bounding_box::{self, is_inside_bounds, BoundingBox},
-        collider::Collider,
+        collider::{self, Collider},
         controls::{self, KeyboardControls},
         game::Game,
         paddle::{Player, Side},
         wall::Wall,
         PaddleBundle,
     },
+    constants::SCREEN_SHAKE_MULTIPLIER,
     events::score,
     states::AppState,
 };
@@ -116,6 +120,7 @@ pub fn apply_ball_velocity(
 pub fn collide_ball(
     mut ball_query: Query<(&Transform, &mut ball::Velocity), With<Ball>>,
     collider_query: Query<(Entity, &Transform), With<Collider>>,
+    mut ev_writer: EventWriter<collider::Event>,
 ) {
     let (ball_tf, mut ball_vel) = ball_query.single_mut();
     let ball_size = ball_tf.scale.truncate();
@@ -131,6 +136,8 @@ pub fn collide_ball(
                 "Collision between {:?} and {:?}: {:?}",
                 ball_tf, collider_tf, collision
             );
+
+            ev_writer.send(collider::Event {});
 
             let mut reflect_x = false;
             let mut reflect_y = false;
@@ -190,6 +197,57 @@ pub fn handle_score_event(
     }
 
     ev_score.clear();
+}
+
+// TODO: copypasta doc comment
+/// Say, for whatever reason, we want to keep track
+/// of when exactly some specific entities were spawned.
+#[derive(Component)]
+pub struct ScreenShakeTimer {
+    timer: Timer,
+    original_camera_pos: Vec2,
+}
+
+impl ScreenShakeTimer {
+    pub fn new(original_camera_pos: Vec2) -> Self {
+        Self {
+            timer: Timer::from_seconds(0.75, bevy::time::TimerMode::Once),
+            original_camera_pos,
+        }
+    }
+}
+
+pub fn do_screen_shake(
+    mut commands: Commands,
+    mut collision_events: EventReader<collider::Event>,
+    mut timer_q: Query<(Entity, &mut ScreenShakeTimer)>,
+    mut camera_q: Query<&mut Transform, With<Camera>>,
+    time: Res<Time>,
+) {
+    if let Some(_) = collision_events.iter().next() {
+        // Begin a screen shake timer
+        commands.spawn(ScreenShakeTimer::new(Vec2::ZERO));
+    }
+
+    // TODO: what do we do about multiple screen shakes in flight at once?
+
+    timer_q.iter_mut().for_each(|(timer_ent, mut timer)| {
+        let mut camera_tf = camera_q.single_mut();
+
+        // Return the camera to its original position so that the screen shake
+        // remains centered
+        camera_tf.translation.x = 0.0;
+        camera_tf.translation.y = 0.0;
+
+        if timer.timer.finished() {
+            commands.entity(timer_ent).despawn();
+        } else {
+            let fade = 1.0 - timer.timer.percent();
+            camera_tf.translation.x += rand::random::<f32>() * SCREEN_SHAKE_MULTIPLIER * fade;
+            camera_tf.translation.y += rand::random::<f32>() * SCREEN_SHAKE_MULTIPLIER * fade;
+        }
+        timer.timer.tick(time.delta());
+    });
 }
 
 #[cfg(test)]

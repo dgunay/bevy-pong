@@ -9,7 +9,7 @@ use bevy::{
     time::{Timer, TimerMode},
 };
 use bevy_prototype_lyon::prelude::ShapePlugin;
-use component::main_menu;
+use component::{collider, main_menu};
 use events::score;
 use states::AppState;
 use systems::LogSamplingTimer;
@@ -40,6 +40,7 @@ impl Plugin for PongPlugin {
             .add_state::<AppState>()
             .add_event::<score::Event>()
             .add_event::<KeyCode>()
+            .add_event::<collider::Event>()
             // Menu scheduling
             .add_system(systems::setup_main_menu.in_schedule(OnEnter(AppState::MainMenu)))
             .add_system(systems::read_keypresses.in_set(OnUpdate(AppState::MainMenu)))
@@ -52,6 +53,7 @@ impl Plugin for PongPlugin {
                     systems::move_paddles,
                     systems::apply_ball_velocity,
                     systems::collide_ball.after(systems::apply_ball_velocity),
+                    systems::do_screen_shake,
                     systems::detect_score,
                     systems::handle_score_event.before(systems::detect_win_condition),
                     systems::detect_win_condition,
