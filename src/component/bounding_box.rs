@@ -5,8 +5,9 @@ use bevy::{
     reflect::Reflect,
     sprite::{collide_aabb::collide, Sprite, SpriteBundle},
 };
+use bevy_inspector_egui::egui::CollapsingHeader;
 
-use super::paddle::Side;
+use super::{collider::Collider, paddle::Side};
 
 #[derive(BevyComponent, Clone, Default)]
 pub struct Detector;
@@ -18,6 +19,7 @@ pub struct Bundle {
     pub sprite: SpriteBundle,
     pub detector: Detector,
     pub bounding_box: BoundingBox,
+    collider: Collider,
 }
 
 #[derive(BevyComponent, Clone, Debug, Default, Reflect)]
@@ -64,6 +66,7 @@ impl Default for Bundle {
             },
             bounding_box: BoundingBox::default(),
             detector: Detector::default(),
+            collider: Collider::default(),
         }
     }
 }

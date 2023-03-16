@@ -55,7 +55,7 @@ pub fn log_game_state(
 pub fn move_paddles(
     keys: Res<Input<KeyCode>>,
     mut query: Query<(&mut Transform, Entity, &KeyboardControls)>,
-    walls_query: Query<&Transform, (With<Wall>, With<Collider>, Without<KeyboardControls>)>,
+    walls_query: Query<&Transform, (With<Collider>, Without<KeyboardControls>)>,
 ) {
     let walls: Vec<_> = walls_query.iter().collect();
 
