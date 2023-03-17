@@ -1,6 +1,6 @@
 use bevy::prelude::{
-    info, BuildChildren, Camera2dBundle, Commands, DespawnRecursiveExt, Entity, NextState, Query,
-    ResMut, SpatialBundle, Vec2, Visibility, With,
+    info, BuildChildren, Commands, DespawnRecursiveExt, Entity, NextState, Query,
+    ResMut, SpatialBundle, Vec2, With,
 };
 
 use crate::{

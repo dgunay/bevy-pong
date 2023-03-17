@@ -1,35 +1,28 @@
-use std::{ops::Mul, time::Duration};
+use std::ops::Mul;
 
 use bevy::{
-    core::Zeroable,
-    core_pipeline::bloom::{self, BloomSettings},
-    ecs::system::Command,
+    core_pipeline::bloom::BloomSettings,
     prelude::{
-        debug, error, info, AssetServer, Audio, Camera, Camera2dBundle, Commands, Component, Deref,
-        DespawnRecursiveExt, Entity, EventReader, EventWriter, Input, KeyCode, NextState, ParamSet,
-        Query, Res, ResMut, Resource, Transform, Vec2, With, Without, World,
+        debug, info, AssetServer, Audio, Camera, Camera2dBundle, Commands, Entity, EventReader,
+        EventWriter, Input, KeyCode, ParamSet, Query, Res, ResMut, Resource, Transform, With,
+        Without,
     },
     sprite::collide_aabb::{collide, Collision},
     time::{Time, Timer},
-    utils::Instant,
 };
 
 use crate::{
     component::{
-        ball::{self, Ball},
+        ball::Ball,
         bounding_box::{self, is_inside_bounds, BoundingBox},
         collider::{self, Collider},
-        controls::{self, KeyboardControls},
-        game::Game,
-        paddle::{Player, Side},
+        controls::KeyboardControls,
+        paddle::Player,
         screen_shake::ScreenShake,
         velocity::{self, Velocity},
-        wall::Wall,
-        PaddleBundle,
     },
-    constants::{BALL_DEFAULT_STARTING_POSITION, DEFAULT_SCREEN_SHAKE_INTENSITY},
+    constants::BALL_DEFAULT_STARTING_POSITION,
     events::score,
-    states::AppState,
 };
 
 const TIME_STEP: f32 = 1.0 / 60.0;
@@ -258,7 +251,12 @@ pub fn collision_sound(
 
 #[cfg(test)]
 mod test {
-    use crate::tests::helpers::{default_setup_graphics, Test};
+    use bevy::prelude::Vec2;
+
+    use crate::{
+        component::{ball, PaddleBundle},
+        tests::helpers::{default_setup_graphics, Test},
+    };
 
     #[test]
     fn ball_paddle_collision_test() {

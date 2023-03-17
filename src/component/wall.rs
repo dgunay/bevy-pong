@@ -1,7 +1,7 @@
-use std::default;
+
 
 use bevy::{
-    prelude::{Bundle as BevyBundle, Color, Component, SpatialBundle, Transform, Vec2, Visibility},
+    prelude::{Bundle as BevyBundle, Color, Component, Vec2, Visibility},
     sprite::{Sprite, SpriteBundle},
 };
 

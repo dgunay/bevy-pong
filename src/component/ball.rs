@@ -3,7 +3,7 @@ use std::ops::Mul;
 use super::velocity::Velocity;
 use crate::constants::{BALL_DEFAULT_STARTING_POSITION, BALL_SCALE, DEFAULT_BALL_SPEED};
 use bevy::prelude::{
-    Bundle as BevyBundle, Color, Component, Deref, DerefMut, Transform, Vec2, Vec3,
+    Bundle as BevyBundle, Color, Component, Transform, Vec2,
 };
 use bevy_prototype_lyon::{
     prelude::{Fill, GeometryBuilder, ShapeBundle},

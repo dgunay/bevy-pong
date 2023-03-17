@@ -1,14 +1,11 @@
 use bevy::{
-    input::keyboard::KeyboardInput,
     prelude::{
-        debug, default, info, AssetServer, BuildChildren, ButtonBundle, Color, Commands,
-        DespawnRecursiveExt, Entity, EventReader, EventWriter, Input, KeyCode, NextState,
-        NodeBundle, Query, Res, ResMut, SpatialBundle, Text2dBundle, Transform, With,
+        debug, info, AssetServer, BuildChildren, Color, Commands,
+        DespawnRecursiveExt, Entity, Input, KeyCode, NextState, Query, Res, ResMut, SpatialBundle, Text2dBundle, Transform, With,
     },
     text::{Text, TextAlignment, TextStyle},
-    ui::{Size, Style, Val, *},
 };
-use bevy_inspector_egui::egui::Key;
+
 
 use crate::{component::main_menu::MainMenu, states::AppState};
 

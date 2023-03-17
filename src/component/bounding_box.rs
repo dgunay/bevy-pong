@@ -5,7 +5,7 @@ use bevy::{
     reflect::Reflect,
     sprite::{collide_aabb::collide, Sprite, SpriteBundle},
 };
-use bevy_inspector_egui::egui::CollapsingHeader;
+
 
 use super::{collider::Collider, paddle::Side};
 

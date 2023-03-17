@@ -8,13 +8,13 @@
 //! - Dynamic screen shake based on relative speed of colliding objects
 use bevy::{
     prelude::{
-        App, ClearColor, Color, Condition, IntoSystemAppConfig, IntoSystemAppConfigs,
-        IntoSystemConfig, IntoSystemConfigs, KeyCode, Msaa, OnEnter, OnExit, OnUpdate, Plugin,
+        App, ClearColor, Color, IntoSystemAppConfig, IntoSystemConfig, IntoSystemConfigs, KeyCode,
+        Msaa, OnEnter, OnExit, OnUpdate, Plugin,
     },
     time::{Timer, TimerMode},
 };
 use bevy_prototype_lyon::prelude::ShapePlugin;
-use component::{collider, main_menu};
+use component::collider;
 use events::score;
 use states::AppState;
 use systems::LogSamplingTimer;
