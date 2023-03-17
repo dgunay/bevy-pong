@@ -1,29 +1,50 @@
-use bevy::prelude::{Component as BevyComponent, Vec2};
+use bevy::{
+    prelude::{Component as BevyComponent, Vec2},
+    sprite::collide_aabb::Collision,
+};
 
 /// A component that indicates that an entity should be treated as collidable.
 #[derive(BevyComponent, Clone, Default, Debug)]
 pub struct Collider;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug)]
 /// Event for when a collision happens.
 pub struct Event {
     pub intensity: f32,
+    pub kind: Collision,
+}
+
+impl Clone for Event {
+    fn clone(&self) -> Self {
+        Self {
+            intensity: self.intensity,
+            // bitwise copy
+            // TODO: why isn't Collision Copy or Clone?
+            kind: unsafe { std::mem::transmute_copy(&self.kind) },
+        }
+    }
 }
 
 impl Event {
-    pub fn new(vel_a: Vec2, vel_b: Vec2) -> Self {
+    pub fn new(kind: &Collision, vel_a: Vec2, vel_b: Vec2) -> Self {
         // Relative velocity determines the intensity of the collision. If the
         // two objects are moving in the same direction, the collision is
         // less intense. If the two objects are moving in opposite directions,
         // the collision is more intense.
         let intensity = (vel_a - vel_b).length();
-        Self { intensity }
+        Self {
+            intensity,
+            kind: unsafe { std::mem::transmute_copy(kind) },
+        }
     }
 }
 
 impl Default for Event {
     fn default() -> Self {
-        Self { intensity: 1.0 }
+        Self {
+            intensity: 1.0,
+            kind: Collision::Inside,
+        }
     }
 }
 
@@ -37,13 +58,13 @@ mod test {
         // Two vectors moving at the same speed in opposite directions
         let vel_a = Vec2::new(5.0, 0.0);
         let vel_b = Vec2::new(-5.0, 0.0);
-        let event = Event::new(vel_a, vel_b);
+        let event = Event::new(&Collision::Inside, vel_a, vel_b);
         assert_eq!(event.intensity, 10.0);
 
         // Two vectors moving at the same speeds in the same direction
         let vel_a = Vec2::new(5.0, 0.0);
         let vel_b = Vec2::new(5.0, 0.0);
-        let event = Event::new(vel_a, vel_b);
+        let event = Event::new(&Collision::Inside, vel_a, vel_b);
         assert_eq!(event.intensity, 0.0);
 
         // Angled vectors
@@ -51,7 +72,7 @@ mod test {
         // easy
         let vel_a = Vec2::new(3.0, 4.0); // mag 5.0
         let vel_b = Vec2::new(-3.0, -4.0); // mag 5.0
-        let event = Event::new(vel_a, vel_b);
+        let event = Event::new(&Collision::Inside, vel_a, vel_b);
         assert_eq!(event.intensity, 10.0);
     }
 }

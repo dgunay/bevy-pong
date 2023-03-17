@@ -5,7 +5,7 @@ use bevy::{
     core_pipeline::bloom::{self, BloomSettings},
     ecs::system::Command,
     prelude::{
-        debug, error, info, Camera, Camera2dBundle, Commands, Component, Deref,
+        debug, error, info, AssetServer, Audio, Camera, Camera2dBundle, Commands, Component, Deref,
         DespawnRecursiveExt, Entity, EventReader, EventWriter, Input, KeyCode, NextState, ParamSet,
         Query, Res, ResMut, Resource, Transform, Vec2, With, Without, World,
     },
@@ -137,7 +137,7 @@ pub fn collide_ball(
             );
 
             if let Some(vel) = maybe_vel {
-                ev_writer.send(collider::Event::new(**vel, **ball_vel));
+                ev_writer.send(collider::Event::new(&collision, **vel, **ball_vel));
             } else {
                 ev_writer.send(collider::Event::default());
             }
@@ -212,7 +212,7 @@ pub fn do_screen_shake(
 ) {
     if let Some(e) = collision_events.iter().next() {
         // Begin a screen shake
-        commands.spawn(ScreenShake::from(*e));
+        commands.spawn(ScreenShake::from(e.clone()));
     }
 
     shake_q.iter_mut().for_each(|(ent, mut shake)| {
@@ -229,6 +229,19 @@ pub fn do_screen_shake(
 
         shake.tick(time.delta());
     });
+}
+
+pub fn collision_sound(
+    mut ev_collision: EventReader<collider::Event>,
+    asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
+) {
+    for e in ev_collision.iter() {
+        if e.kind != Collision::Inside {
+            let sound = asset_server.load("sound/collision.ogg");
+            audio.play(sound);
+        }
+    }
 }
 
 #[cfg(test)]

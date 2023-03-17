@@ -50,6 +50,7 @@ impl Plugin for PongPlugin {
             .add_system(systems::initialize_match.in_schedule(OnEnter(AppState::InGame)))
             .add_systems(
                 (
+                    systems::collision_sound,
                     systems::move_paddles,
                     systems::apply_velocity,
                     systems::collide_ball.after(systems::apply_velocity),
