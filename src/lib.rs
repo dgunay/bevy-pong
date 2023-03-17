@@ -1,6 +1,4 @@
 #![allow(dead_code)]
-#![allow(unused_imports)] // TODO: remove this later
-#![warn(missing_docs)]
 
 //! A simple Pong clone built with Bevy.
 //!
