@@ -31,26 +31,30 @@ pub struct BoundingBox {
 }
 
 impl Bundle {
+    #[must_use]
     /// Sets the visibility of the bounding box.
-    pub fn with_visibility(mut self, visibility: Visibility) -> Self {
+    pub const fn with_visibility(mut self, visibility: Visibility) -> Self {
         self.sprite.visibility = visibility;
         self
     }
 
+    #[must_use]
     /// Sets the dimensions of the bounding box.
     pub fn with_dimensions(mut self, width: f32, height: f32) -> Self {
         self.sprite.transform.scale = (Vec2::new(width, height), 0.0).into();
         self
     }
 
+    #[must_use]
     /// Sets the position of the bounding box.
     pub fn with_position(mut self, pos: Vec2) -> Self {
         self.sprite.transform.translation = (pos, 0.0).into();
         self
     }
 
+    #[must_use]
     /// Sets the side of the bounding box.
-    pub fn on_side(mut self, side: Side) -> Self {
+    pub const fn on_side(mut self, side: Side) -> Self {
         self.bounding_box.side = side;
         self
     }

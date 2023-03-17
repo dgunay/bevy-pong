@@ -10,7 +10,7 @@ use super::velocity::Velocity;
 /// Controls the movement of a paddle with the keyboard. Keybindings are
 /// configurable.
 #[derive(Debug, Clone, Copy, Component)]
-pub struct KeyboardControls {
+pub struct Keyboard {
     /// The KeyCode which should move the paddle up.
     pub up: KeyCode,
     /// The KeyCode which should move the paddle down.
@@ -21,7 +21,7 @@ pub struct KeyboardControls {
     pub right: KeyCode,
 }
 
-impl KeyboardControls {
+impl Keyboard {
     /// Calculates the new position of the paddle if the given key is pressed.
     /// Returns None if the key is not one of the controls.
     pub fn calculate_new_pos(&self, k: KeyCode, transform: &Transform) -> Option<Vec3> {
@@ -66,8 +66,8 @@ impl KeyboardControls {
 }
 
 /// Creates a new `KeyboardControls` with the WASD keys.
-pub fn wasd() -> KeyboardControls {
-    KeyboardControls {
+pub const fn wasd() -> Keyboard {
+    Keyboard {
         up: KeyCode::W,
         down: KeyCode::S,
         left: KeyCode::A,
@@ -76,8 +76,8 @@ pub fn wasd() -> KeyboardControls {
 }
 
 /// Creates a new `KeyboardControls` with the arrow keys.
-pub const fn arrow_keys() -> KeyboardControls {
-    KeyboardControls {
+pub const fn arrow_keys() -> Keyboard {
+    Keyboard {
         up: KeyCode::Up,
         down: KeyCode::Down,
         left: KeyCode::Left,
@@ -85,7 +85,7 @@ pub const fn arrow_keys() -> KeyboardControls {
     }
 }
 
-impl Default for KeyboardControls {
+impl Default for Keyboard {
     fn default() -> Self {
         arrow_keys()
     }

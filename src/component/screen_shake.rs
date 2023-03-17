@@ -37,6 +37,7 @@ impl ScreenShake {
         self.timer.tick(delta);
     }
 
+    #[must_use]
     /// Returns true if the screen shake is done.
     pub fn done(&self) -> bool {
         self.timer.finished()

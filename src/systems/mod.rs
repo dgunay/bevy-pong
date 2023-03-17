@@ -16,7 +16,7 @@ use crate::{
         ball::Ball,
         bounding_box::{self, is_inside_bounds, BoundingBox},
         collider::{self, Collider},
-        controls::KeyboardControls,
+        controls::Keyboard,
         paddle::Player,
         screen_shake::ScreenShake,
         velocity::{self, Velocity},
@@ -69,8 +69,8 @@ pub fn log_game_state(
 /// with a wall, it doesn't move.
 pub fn move_paddles(
     keys: Res<Input<KeyCode>>,
-    mut query: Query<(&mut Transform, &mut Velocity, Entity, &KeyboardControls)>,
-    walls_query: Query<&Transform, (With<Collider>, Without<KeyboardControls>)>,
+    mut query: Query<(&mut Transform, &mut Velocity, Entity, &Keyboard)>,
+    walls_query: Query<&Transform, (With<Collider>, Without<Keyboard>)>,
 ) {
     let walls: Vec<_> = walls_query.iter().collect();
 

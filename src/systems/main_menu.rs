@@ -57,7 +57,7 @@ pub fn read_keypresses(keys: Res<Input<KeyCode>>, mut state: ResMut<NextState<Ap
     keys.get_just_pressed().for_each(|key| {
         debug!("Key pressed: {:?}", key);
         if key == &KeyCode::Space {
-            state.set(AppState::InGame)
+            state.set(AppState::InGame);
         }
     });
 }

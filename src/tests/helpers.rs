@@ -76,7 +76,7 @@ impl<A> Test<A> {
             for _ in 0..self.frames {
                 app.update();
             }
-            (self.check)(&app, res)
+            (self.check)(&app, res);
         }
     }
 }

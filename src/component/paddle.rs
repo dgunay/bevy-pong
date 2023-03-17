@@ -8,7 +8,7 @@ use crate::constants::PADDLE_SCALE;
 
 use super::{
     collider::Collider,
-    controls::{self, KeyboardControls},
+    controls::{self, Keyboard},
     velocity::Velocity,
 };
 
@@ -83,7 +83,7 @@ pub struct Bundle {
 
     /// Defines the input controls for the paddle. Used to segregate controls
     /// per player.
-    controls: KeyboardControls,
+    controls: Keyboard,
 
     collider: Collider,
 
@@ -94,7 +94,7 @@ pub struct Bundle {
 
 impl Bundle {
     /// Creates a new paddle bundle with the given controls and side.
-    pub fn new(controls: KeyboardControls, side: Side) -> Self {
+    pub fn new(controls: Keyboard, side: Side) -> Self {
         Self {
             controls,
             player: Player::new(side, Vec2::new(0.0, 0.0)),
@@ -138,7 +138,7 @@ impl Default for Bundle {
                 },
                 ..Default::default()
             },
-            controls: KeyboardControls::default(),
+            controls: Keyboard::default(),
             collider: Collider::default(),
             player: Player::default(),
             velocity: Velocity::default(),

@@ -2,9 +2,7 @@ use std::ops::Mul;
 
 use super::velocity::Velocity;
 use crate::constants::{BALL_DEFAULT_STARTING_POSITION, BALL_SCALE, DEFAULT_BALL_SPEED};
-use bevy::prelude::{
-    Bundle as BevyBundle, Color, Component, Transform, Vec2,
-};
+use bevy::prelude::{Bundle as BevyBundle, Color, Component, Transform, Vec2};
 use bevy_prototype_lyon::{
     prelude::{Fill, GeometryBuilder, ShapeBundle},
     shapes,
@@ -28,12 +26,14 @@ pub struct Bundle {
 }
 
 impl Bundle {
+    #[must_use]
     /// Sets the velocity of the ball.
     pub fn with_velocity(mut self, velocity: Vec2) -> Self {
         self.velocity = velocity.into();
         self
     }
 
+    #[must_use]
     /// Sets the position of the ball.
     pub fn with_position(mut self, pos: Vec2) -> Self {
         self.circle.transform.translation = (pos, 0.0).into();
