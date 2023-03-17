@@ -65,7 +65,7 @@ impl KeyboardControls {
     }
 }
 
-/// Creates a new KeyboardControls with the WASD keys.
+/// Creates a new `KeyboardControls` with the WASD keys.
 pub fn wasd() -> KeyboardControls {
     KeyboardControls {
         up: KeyCode::W,
@@ -75,7 +75,7 @@ pub fn wasd() -> KeyboardControls {
     }
 }
 
-/// Creates a new KeyboardControls with the arrow keys.
+/// Creates a new `KeyboardControls` with the arrow keys.
 pub fn arrow_keys() -> KeyboardControls {
     KeyboardControls {
         up: KeyCode::Up,

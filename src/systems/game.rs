@@ -93,9 +93,7 @@ pub fn detect_win_condition(
         .map(|(id, _)| id)
         .collect();
 
-    if winners.len() > 1 {
-        panic!("Multiple winners!");
-    }
+    assert!(winners.len() <= 1, "Multiple winners!");
 
     if winners.len() == 1 {
         info!("Winner: {:?}", winners[0]);

@@ -73,7 +73,7 @@ impl From<super::collider::Event> for ScreenShake {
         let duration = (intensity_factor * DEFAULT_SCREEN_SHAKE_DURATION)
             .clamp(0.2, DEFAULT_SCREEN_SHAKE_DURATION * 2.0);
 
-        ScreenShake::default()
+        Self::default()
             .with_intensity(intensity_factor)
             .with_duration(duration)
     }

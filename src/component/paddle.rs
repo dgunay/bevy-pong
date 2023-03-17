@@ -13,7 +13,7 @@ use super::{
 };
 
 /// A side of the screen. Used mainly for identifying who scored.
-#[derive(Clone, Copy, Debug, PartialEq, Reflect)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Reflect)]
 pub enum Side {
     /// The left side of the screen.
     Left,
@@ -72,7 +72,7 @@ impl Default for Player {
 }
 
 /// A bundle that contains all the components needed to create a paddle. Includes
-/// a SpriteBundle for visual appearance and position, a `KeyboardControls` for
+/// a `SpriteBundle` for visual appearance and position, a `KeyboardControls` for
 /// input, is a Collider, has a Velocity, and includes a Player component.
 #[derive(Clone, Bundle)]
 pub struct PaddleBundle {
