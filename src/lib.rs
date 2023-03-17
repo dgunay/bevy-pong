@@ -1,4 +1,15 @@
 #![allow(dead_code)]
+#![warn(clippy::all)]
+#![warn(clippy::correctness)]
+#![warn(clippy::suspicious)]
+#![warn(clippy::style)]
+#![warn(clippy::complexity)]
+#![warn(clippy::perf)]
+#![warn(clippy::pedantic)]
+// #![warn(clippy::restriction)]
+#![warn(clippy::nursery)]
+#![warn(clippy::cargo)]
+#![allow(clippy::must_use_candidate)]
 
 //! A simple Pong clone built with Bevy.
 //!

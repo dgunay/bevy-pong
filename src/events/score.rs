@@ -11,7 +11,7 @@ pub struct Event {
 
 impl Event {
     /// Creates a new score event.
-    pub fn new(player_side: Side) -> Self {
+    pub const fn new(player_side: Side) -> Self {
         Self { player_side }
     }
 }

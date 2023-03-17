@@ -6,7 +6,6 @@ use bevy::{
     sprite::{collide_aabb::collide, Sprite, SpriteBundle},
 };
 
-
 use super::{collider::Collider, paddle::Side};
 
 /// A component that is used to mark an entity as being able to detect scores.
@@ -79,18 +78,18 @@ impl Default for Bundle {
 
 /// Returns true if the entity is outside the bounds of the bounding box.
 pub fn is_outside_bounds(bounds: &Transform, entity: &Transform) -> bool {
-    return collide(
+    collide(
         bounds.translation,
         bounds.scale.truncate(),
         entity.translation,
         entity.scale.truncate(),
     )
-    .is_none();
+    .is_none()
 }
 
 /// Returns true if the entity is inside the bounds of the bounding box.
 pub fn is_inside_bounds(bounds: &Transform, entity: &Transform) -> bool {
-    return !is_outside_bounds(bounds, entity);
+    !is_outside_bounds(bounds, entity)
 }
 
 #[cfg(test)]

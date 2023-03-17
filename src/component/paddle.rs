@@ -72,7 +72,7 @@ impl Default for Player {
 }
 
 /// A bundle that contains all the components needed to create a paddle. Includes
-/// a SpriteBundle for visual appearance and position, a KeyboardControls for
+/// a SpriteBundle for visual appearance and position, a `KeyboardControls` for
 /// input, is a Collider, has a Velocity, and includes a Player component.
 #[derive(Clone, Bundle)]
 pub struct PaddleBundle {

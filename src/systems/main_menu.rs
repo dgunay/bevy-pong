@@ -1,11 +1,11 @@
 use bevy::{
     prelude::{
-        debug, info, AssetServer, BuildChildren, Color, Commands,
-        DespawnRecursiveExt, Entity, Input, KeyCode, NextState, Query, Res, ResMut, SpatialBundle, Text2dBundle, Transform, With,
+        debug, info, AssetServer, BuildChildren, Color, Commands, DespawnRecursiveExt, Entity,
+        Input, KeyCode, NextState, Query, Res, ResMut, SpatialBundle, Text2dBundle, Transform,
+        With,
     },
     text::{Text, TextAlignment, TextStyle},
 };
-
 
 use crate::{component::main_menu::MainMenu, states::AppState};
 
@@ -29,7 +29,7 @@ pub fn setup_main_menu(
     };
 
     let prompt_style = TextStyle {
-        font: font.clone(),
+        font,
         font_size: 30.0,
         color: Color::WHITE,
     };
@@ -56,9 +56,8 @@ pub fn setup_main_menu(
 pub fn read_keypresses(keys: Res<Input<KeyCode>>, mut state: ResMut<NextState<AppState>>) {
     keys.get_just_pressed().for_each(|key| {
         debug!("Key pressed: {:?}", key);
-        match key {
-            KeyCode::Space => state.set(AppState::InGame),
-            _ => (),
+        if key == &KeyCode::Space {
+            state.set(AppState::InGame)
         }
     });
 }
