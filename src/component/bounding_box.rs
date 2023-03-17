@@ -9,6 +9,7 @@ use bevy_inspector_egui::egui::CollapsingHeader;
 
 use super::{collider::Collider, paddle::Side};
 
+/// A component that is used to mark an entity as being able to detect scores.
 #[derive(BevyComponent, Clone, Default)]
 pub struct Detector;
 
@@ -22,6 +23,7 @@ pub struct Bundle {
     collider: Collider,
 }
 
+// TODO: this component probably doesn't need to be its own thing
 #[derive(BevyComponent, Clone, Debug, Default, Reflect)]
 pub struct BoundingBox {
     // TODO: probably better to just associate each player with a score zone instead,
@@ -30,21 +32,25 @@ pub struct BoundingBox {
 }
 
 impl Bundle {
+    /// Sets the visibility of the bounding box.
     pub fn with_visibility(mut self, visibility: Visibility) -> Self {
         self.sprite.visibility = visibility;
         self
     }
 
+    /// Sets the dimensions of the bounding box.
     pub fn with_dimensions(mut self, width: f32, height: f32) -> Self {
         self.sprite.transform.scale = (Vec2::new(width, height), 0.0).into();
         self
     }
 
+    /// Sets the position of the bounding box.
     pub fn with_position(mut self, pos: Vec2) -> Self {
         self.sprite.transform.translation = (pos, 0.0).into();
         self
     }
 
+    /// Sets the side of the bounding box.
     pub fn on_side(mut self, side: Side) -> Self {
         self.bounding_box.side = side;
         self
@@ -71,6 +77,7 @@ impl Default for Bundle {
     }
 }
 
+/// Returns true if the entity is outside the bounds of the bounding box.
 pub fn is_outside_bounds(bounds: &Transform, entity: &Transform) -> bool {
     return collide(
         bounds.translation,
@@ -81,6 +88,7 @@ pub fn is_outside_bounds(bounds: &Transform, entity: &Transform) -> bool {
     .is_none();
 }
 
+/// Returns true if the entity is inside the bounds of the bounding box.
 pub fn is_inside_bounds(bounds: &Transform, entity: &Transform) -> bool {
     return !is_outside_bounds(bounds, entity);
 }

@@ -1,6 +1,13 @@
 #![allow(dead_code)]
 #![allow(unused_imports)] // TODO: remove this later
+#![warn(missing_docs)]
 
+//! A simple Pong clone built with Bevy.
+//!
+//! Features:
+//! - 2 player local multiplayer (WASD and arrow keys)
+//! - Sound effects
+//! - Dynamic screen shake based on relative speed of colliding objects
 use bevy::{
     prelude::{
         App, ClearColor, Color, Condition, IntoSystemAppConfig, IntoSystemAppConfigs,
@@ -14,14 +21,20 @@ use events::score;
 use states::AppState;
 use systems::LogSamplingTimer;
 
-mod component;
-mod events;
+/// Systems used to update the game state.
 mod systems;
 mod tests;
 
+/// Components used to compose game objects.
+pub mod component;
+/// Constants used throughout the game.
 pub mod constants;
+/// Events that can be emitted by the game.
+pub mod events;
+/// Game states.
 pub mod states;
 
+/// The main plugin for the game.
 pub struct PongPlugin;
 
 impl Plugin for PongPlugin {

@@ -10,7 +10,10 @@ pub struct Collider;
 #[derive(Debug)]
 /// Event for when a collision happens.
 pub struct Event {
+    /// The intensity of the collision. This is the magnitude of the relative
+    /// velocity of the two colliding objects.
     pub intensity: f32,
+    /// The side of the collision.
     pub kind: Collision,
 }
 
@@ -26,6 +29,7 @@ impl Clone for Event {
 }
 
 impl Event {
+    /// Creates a new collision event.
     pub fn new(kind: &Collision, vel_a: Vec2, vel_b: Vec2) -> Self {
         // Relative velocity determines the intensity of the collision. If the
         // two objects are moving in the same direction, the collision is

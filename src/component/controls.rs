@@ -7,15 +7,23 @@ use crate::constants::PADDLE_SPEED_MULTIPLIER;
 use super::velocity::Velocity;
 
 // TODO: make the kind of controller (keyboard, gamepad, etc) generic
+/// Controls the movement of a paddle with the keyboard. Keybindings are
+/// configurable.
 #[derive(Debug, Clone, Copy, Component)]
 pub struct KeyboardControls {
+    /// The KeyCode which should move the paddle up.
     pub up: KeyCode,
+    /// The KeyCode which should move the paddle down.
     pub down: KeyCode,
+    /// The KeyCode which should move the paddle left.
     pub left: KeyCode,
+    /// The KeyCode which should move the paddle right.
     pub right: KeyCode,
 }
 
 impl KeyboardControls {
+    /// Calculates the new position of the paddle if the given key is pressed.
+    /// Returns None if the key is not one of the controls.
     pub fn calculate_new_pos(&self, k: KeyCode, transform: &Transform) -> Option<Vec3> {
         match k {
             k if k == self.up => Some(
@@ -43,6 +51,8 @@ impl KeyboardControls {
         }
     }
 
+    /// Calculates the new velocity of the paddle if the given key is pressed.
+    /// Returns the default velocity if the key is not one of the controls.
     pub fn to_velocity(&self, k: KeyCode) -> Velocity {
         match k {
             k if k == self.up => Velocity::from(Vec2::new(0.0, PADDLE_SPEED_MULTIPLIER)),
@@ -55,6 +65,7 @@ impl KeyboardControls {
     }
 }
 
+/// Creates a new KeyboardControls with the WASD keys.
 pub fn wasd() -> KeyboardControls {
     KeyboardControls {
         up: KeyCode::W,
@@ -64,6 +75,7 @@ pub fn wasd() -> KeyboardControls {
     }
 }
 
+/// Creates a new KeyboardControls with the arrow keys.
 pub fn arrow_keys() -> KeyboardControls {
     KeyboardControls {
         up: KeyCode::Up,

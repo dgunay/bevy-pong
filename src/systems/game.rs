@@ -17,6 +17,9 @@ use crate::{
     states::AppState,
 };
 
+/// Spawns all of the entities needed to play a game of Pong. They are spawned
+/// as children of a single Game entity, which makes it easier to despawn all
+/// of the entities at once when finished.
 pub fn initialize_match(mut commands: Commands) {
     // Create a parent Game entity to make it easier to apply setup/teardown logic
     commands
@@ -62,19 +65,24 @@ pub fn initialize_match(mut commands: Commands) {
         });
 }
 
+/// Despawns all of the entities needed to play a game of Pong.
 pub fn clear_active_match(mut commands: Commands, game_query: Query<Entity, With<Game>>) {
     let ent = game_query.single();
     commands.entity(ent).despawn_recursive();
 }
 
+/// Returns true if there is an active match.
 pub fn has_active_match(game_query: Query<Entity, With<Game>>) -> bool {
     !game_query.is_empty()
 }
 
+/// Returns true if there is no active match.
 pub fn no_active_match(game_query: Query<Entity, With<Game>>) -> bool {
     game_query.is_empty()
 }
 
+/// Checks if a player has won the game. If a player has won, the game state
+/// transitions to the main menu.
 pub fn detect_win_condition(
     players_query: Query<(Entity, &Player)>,
     mut state: ResMut<NextState<AppState>>,

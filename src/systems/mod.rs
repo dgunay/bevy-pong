@@ -27,7 +27,7 @@ use crate::{
         wall::Wall,
         PaddleBundle,
     },
-    constants::DEFAULT_SCREEN_SHAKE_INTENSITY,
+    constants::{BALL_DEFAULT_STARTING_POSITION, DEFAULT_SCREEN_SHAKE_INTENSITY},
     events::score,
     states::AppState,
 };
@@ -40,6 +40,7 @@ mod main_menu;
 pub use game::*;
 pub use main_menu::*;
 
+/// Creates a camera with a bloom effect for a retro look.
 pub fn spawn_camera(mut commands: Commands) {
     let mut bloom_settings = BloomSettings::OLD_SCHOOL;
     bloom_settings.intensity = 0.15;
@@ -71,6 +72,8 @@ pub fn log_game_state(
     }
 }
 
+/// Moves the paddles based on the keyboard input. If a paddle would collide
+/// with a wall, it doesn't move.
 pub fn move_paddles(
     keys: Res<Input<KeyCode>>,
     mut query: Query<(&mut Transform, &mut Velocity, Entity, &KeyboardControls)>,
@@ -107,6 +110,7 @@ pub fn move_paddles(
         });
 }
 
+/// Changes the position of the ball based on its velocity.
 pub fn apply_velocity(mut ball_query: Query<(&mut Transform, &velocity::Velocity)>) {
     ball_query.iter_mut().for_each(|(mut tf, vel)| {
         let new_xy = vel.mul(TIME_STEP);
@@ -116,6 +120,8 @@ pub fn apply_velocity(mut ball_query: Query<(&mut Transform, &velocity::Velocity
     });
 }
 
+/// Checks if the ball collides with a Collider. If it does, it sends a collision
+/// event and reflects the ball according to the collision angle.
 pub fn collide_ball(
     mut ball_query: Query<(&Transform, &mut Velocity), With<Ball>>,
     collider_query: Query<(Entity, &Transform, Option<&Velocity>), (With<Collider>, Without<Ball>)>,
@@ -164,6 +170,8 @@ pub fn collide_ball(
     }
 }
 
+/// Checks if the ball is inside a score zone. If it is, it sends a score event
+/// based on the side of the score zone.
 pub fn detect_score(
     ball_query: Query<&Transform, With<Ball>>,
     score_zones: Query<(&Transform, &BoundingBox), With<bounding_box::Detector>>,
@@ -178,6 +186,8 @@ pub fn detect_score(
     }
 }
 
+/// Handles score events by resetting the ball and the players' positions. The
+/// player that scored has their score incremented.
 pub fn handle_score_event(
     mut ev_score: EventReader<score::Event>,
     mut set: ParamSet<(
@@ -190,7 +200,7 @@ pub fn handle_score_event(
 
         // Reset positions
         set.p0().get_single_mut().unwrap().0.translation =
-            (ball::BALL_DEFAULT_STARTING_POSITION, 0.0).into();
+            (BALL_DEFAULT_STARTING_POSITION, 0.0).into();
 
         for (mut tf, mut player) in set.p1().iter_mut() {
             tf.translation = (player.starting_pos, 0.0).into();
@@ -203,6 +213,7 @@ pub fn handle_score_event(
 }
 
 // TODO: vary the intensity based on the relative speed of the collision
+/// Handles collision events by shaking the screen in a decaying fashion.
 pub fn do_screen_shake(
     mut commands: Commands,
     mut collision_events: EventReader<collider::Event>,
@@ -231,6 +242,7 @@ pub fn do_screen_shake(
     });
 }
 
+/// Plays a sound when a collision occurs.
 pub fn collision_sound(
     mut ev_collision: EventReader<collider::Event>,
     asset_server: Res<AssetServer>,

@@ -4,19 +4,25 @@ use bevy::{
     sprite::{Sprite, SpriteBundle},
 };
 
+use crate::constants::PADDLE_SCALE;
+
 use super::{
     collider::Collider,
     controls::{self, KeyboardControls},
     velocity::Velocity,
 };
 
+/// A side of the screen. Used mainly for identifying who scored.
 #[derive(Clone, Copy, Debug, PartialEq, Reflect)]
 pub enum Side {
+    /// The left side of the screen.
     Left,
+    /// The right side of the screen.
     Right,
 }
 
 impl Side {
+    /// Returns the opposite side of the screen.
     pub fn opposite(&self) -> Self {
         match self {
             Self::Left => Self::Right,
@@ -26,19 +32,26 @@ impl Side {
 }
 
 impl Default for Side {
+    /// Defaults to the left side of the screen.
     fn default() -> Self {
         Self::Left
     }
 }
 
+/// A component that records a Player's side, their score, and their starting
+/// position.
 #[derive(Component, Clone, Reflect)]
 pub struct Player {
+    /// How many points the player has scored.
     pub score: u64,
+    /// The side of the screen the player is on.
     pub side: Side,
+    /// The starting position of the player.
     pub starting_pos: Vec2,
 }
 
 impl Player {
+    /// Creates a new player on the given side, at the given starting position.
     pub fn new(side: Side, starting_pos: Vec2) -> Self {
         Self {
             score: 0,
@@ -58,6 +71,9 @@ impl Default for Player {
     }
 }
 
+/// A bundle that contains all the components needed to create a paddle. Includes
+/// a SpriteBundle for visual appearance and position, a KeyboardControls for
+/// input, is a Collider, has a Velocity, and includes a Player component.
 #[derive(Clone, Bundle)]
 pub struct PaddleBundle {
     #[bundle]
@@ -76,6 +92,7 @@ pub struct PaddleBundle {
 }
 
 impl PaddleBundle {
+    /// Creates a new paddle bundle with the given controls and side.
     pub fn new(controls: KeyboardControls, side: Side) -> Self {
         Self {
             controls,
@@ -84,14 +101,17 @@ impl PaddleBundle {
         }
     }
 
+    /// Creates a new paddle bundle for the left player.
     pub fn left_player() -> Self {
         Self::new(controls::wasd(), Side::Left)
     }
 
+    /// Creates a new paddle bundle for the right player.
     pub fn right_player() -> Self {
         Self::new(controls::arrow_keys(), Side::Right)
     }
 
+    /// Sets the position of the paddle.
     pub fn with_position(mut self, pos: Vec2) -> Self {
         self.sprite.transform.translation = (pos, 0.0).into();
         self.player.starting_pos = pos;
@@ -99,9 +119,9 @@ impl PaddleBundle {
     }
 }
 
-const PADDLE_SCALE: Vec3 = Vec3::new(20.0, 100.0, 1.0);
-
 impl Default for PaddleBundle {
+    /// By default, paddles are white, are at the origin, and have the defaults
+    /// for the other components.
     fn default() -> Self {
         Self {
             sprite: SpriteBundle {

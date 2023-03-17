@@ -7,9 +7,12 @@ use bevy::{
 
 use super::collider::Collider;
 
+/// A component that is used to mark an entity as being a wall.
 #[derive(Debug, Component, Default)]
 pub struct Wall;
 
+/// A bundle that creates an entity which is a wall, is collidable, and has
+/// a sprite bundle (look, position, dimensions, etc.).
 #[derive(BevyBundle)]
 pub struct Bundle {
     collider: Collider,
@@ -19,16 +22,19 @@ pub struct Bundle {
 }
 
 impl Bundle {
+    /// Sets the position of the wall.
     pub fn at(mut self, pos: Vec2) -> Self {
         self.sprite.transform.translation = pos.extend(0.0);
         self
     }
 
+    /// Sets the dimensions of the wall.
     pub fn with_size(mut self, width: f32, height: f32) -> Self {
         self.sprite.transform.scale = Vec2::new(width, height).extend(0.0);
         self
     }
 
+    /// Makes the wall visible. Useful for debugging.
     pub fn visible(mut self) -> Self {
         self.sprite.visibility = Visibility::Visible;
         self
@@ -36,6 +42,8 @@ impl Bundle {
 }
 
 impl Default for Bundle {
+    /// By default, walls are invisible and have a translucent red color when
+    /// visible.
     fn default() -> Self {
         Self {
             sprite: SpriteBundle {
