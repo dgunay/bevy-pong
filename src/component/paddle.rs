@@ -1,5 +1,5 @@
 use bevy::{
-    prelude::{Bundle, Color, Component, Transform, Vec2, Vec3},
+    prelude::{Bundle as BevyBundle, Color, Component, Transform, Vec2, Vec3},
     reflect::Reflect,
     sprite::{Sprite, SpriteBundle},
 };
@@ -22,8 +22,9 @@ pub enum Side {
 }
 
 impl Side {
+    #[must_use]
     /// Returns the opposite side of the screen.
-    pub fn opposite(&self) -> Self {
+    pub const fn opposite(&self) -> Self {
         match self {
             Self::Left => Self::Right,
             Self::Right => Self::Left,
@@ -52,7 +53,7 @@ pub struct Player {
 
 impl Player {
     /// Creates a new player on the given side, at the given starting position.
-    pub fn new(side: Side, starting_pos: Vec2) -> Self {
+    pub const fn new(side: Side, starting_pos: Vec2) -> Self {
         Self {
             score: 0,
             side,
@@ -74,8 +75,8 @@ impl Default for Player {
 /// A bundle that contains all the components needed to create a paddle. Includes
 /// a `SpriteBundle` for visual appearance and position, a `KeyboardControls` for
 /// input, is a Collider, has a Velocity, and includes a Player component.
-#[derive(Clone, Bundle)]
-pub struct PaddleBundle {
+#[derive(Clone, BevyBundle)]
+pub struct Bundle {
     #[bundle]
     /// Controls the position and look of the paddle.
     sprite: SpriteBundle,
@@ -91,7 +92,7 @@ pub struct PaddleBundle {
     player: Player,
 }
 
-impl PaddleBundle {
+impl Bundle {
     /// Creates a new paddle bundle with the given controls and side.
     pub fn new(controls: KeyboardControls, side: Side) -> Self {
         Self {
@@ -111,6 +112,7 @@ impl PaddleBundle {
         Self::new(controls::arrow_keys(), Side::Right)
     }
 
+    #[must_use]
     /// Sets the position of the paddle.
     pub fn with_position(mut self, pos: Vec2) -> Self {
         self.sprite.transform.translation = (pos, 0.0).into();
@@ -119,7 +121,7 @@ impl PaddleBundle {
     }
 }
 
-impl Default for PaddleBundle {
+impl Default for Bundle {
     /// By default, paddles are white, are at the origin, and have the defaults
     /// for the other components.
     fn default() -> Self {

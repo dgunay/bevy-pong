@@ -17,14 +17,16 @@ impl ScreenShake {
         Self::default()
     }
 
+    #[must_use]
     /// Sets how long the screen shake should last.
     pub fn with_duration(mut self, duration: f32) -> Self {
         self.timer = Timer::from_seconds(duration, bevy::time::TimerMode::Once);
         self
     }
 
+    #[must_use]
     /// Sets how intense the screen shake should be.
-    pub fn with_intensity(mut self, intensity: f32) -> Self {
+    pub const fn with_intensity(mut self, intensity: f32) -> Self {
         self.intensity = intensity;
         self
     }

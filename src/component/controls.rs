@@ -76,7 +76,7 @@ pub fn wasd() -> KeyboardControls {
 }
 
 /// Creates a new `KeyboardControls` with the arrow keys.
-pub fn arrow_keys() -> KeyboardControls {
+pub const fn arrow_keys() -> KeyboardControls {
     KeyboardControls {
         up: KeyCode::Up,
         down: KeyCode::Down,

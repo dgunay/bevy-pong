@@ -77,6 +77,6 @@ mod test {
         let vel_a = Vec2::new(3.0, 4.0); // mag 5.0
         let vel_b = Vec2::new(-3.0, -4.0); // mag 5.0
         let event = Event::new(&Collision::Inside, vel_a, vel_b);
-        assert_eq!(event.intensity, 10.0);
+        assert_eq!(event.intensity, 10.0 as f32);
     }
 }

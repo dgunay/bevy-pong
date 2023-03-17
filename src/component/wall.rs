@@ -20,18 +20,21 @@ pub struct Bundle {
 }
 
 impl Bundle {
+    #[must_use]
     /// Sets the position of the wall.
     pub const fn at(mut self, pos: Vec2) -> Self {
         self.sprite.transform.translation = pos.extend(0.0);
         self
     }
 
+    #[must_use]
     /// Sets the dimensions of the wall.
     pub const fn with_size(mut self, width: f32, height: f32) -> Self {
         self.sprite.transform.scale = Vec2::new(width, height).extend(0.0);
         self
     }
 
+    #[must_use]
     /// Makes the wall visible. Useful for debugging.
     pub const fn visible(mut self) -> Self {
         self.sprite.visibility = Visibility::Visible;

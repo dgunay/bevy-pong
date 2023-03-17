@@ -1,6 +1,6 @@
 use bevy::prelude::{
-    info, BuildChildren, Commands, DespawnRecursiveExt, Entity, NextState, Query,
-    ResMut, SpatialBundle, Vec2, With,
+    info, BuildChildren, Commands, DespawnRecursiveExt, Entity, NextState, Query, ResMut,
+    SpatialBundle, Vec2, With,
 };
 
 use crate::{
@@ -8,7 +8,7 @@ use crate::{
         ball, bounding_box,
         game::Game,
         paddle::{Player, Side},
-        wall, PaddleBundle,
+        wall, Bundle,
     },
     constants::{
         BOTTOM_WALL_POSITION, BOTTOM_WALL_SIZE, LEFT_PADDLE_STARTING_POSITION,
@@ -26,9 +26,8 @@ pub fn initialize_match(mut commands: Commands) {
         .spawn((Game, SpatialBundle::default()))
         .with_children(|parent| {
             // paddles
-            parent.spawn(PaddleBundle::left_player().with_position(LEFT_PADDLE_STARTING_POSITION));
-            parent
-                .spawn(PaddleBundle::right_player().with_position(RIGHT_PADDLE_STARTING_POSITION));
+            parent.spawn(Bundle::left_player().with_position(LEFT_PADDLE_STARTING_POSITION));
+            parent.spawn(Bundle::right_player().with_position(RIGHT_PADDLE_STARTING_POSITION));
 
             // ball
             parent.spawn(ball::Bundle::default());

@@ -254,7 +254,7 @@ mod test {
     use bevy::prelude::Vec2;
 
     use crate::{
-        component::{ball, PaddleBundle},
+        component::{ball, Bundle},
         tests::helpers::{default_setup_graphics, Test},
     };
 
@@ -266,7 +266,7 @@ mod test {
             setup: |app| {
                 app.add_system(collide_ball);
                 app.world
-                    .spawn(PaddleBundle::default().with_position(Vec2::new(10.0, 0.0)));
+                    .spawn(Bundle::default().with_position(Vec2::new(10.0, 0.0)));
                 app.world
                     .spawn(ball::Bundle::default().with_velocity(Vec2::new(5.0, 0.0)))
                     .id()

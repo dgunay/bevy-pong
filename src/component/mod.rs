@@ -17,4 +17,4 @@ pub mod velocity;
 /// Components and bundles for the walls.
 pub mod wall;
 
-pub use paddle::PaddleBundle;
+pub use paddle::Bundle;
