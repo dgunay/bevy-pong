@@ -23,11 +23,6 @@ pub const BOTTOM_WALL_SIZE: Vec2 = Vec2::new(500.0, 25.0);
 /// The X and Y coordinates of the bottom wall's starting position.
 pub const BOTTOM_WALL_POSITION: Vec2 = Vec2::new(0.0, -250.0);
 
-/// How hard the screen shakes when a collision occurs.
-pub const DEFAULT_SCREEN_SHAKE_INTENSITY: f32 = 25.0;
-/// How long the screen shakes (in seconds) when a collision occurs.
-pub const DEFAULT_SCREEN_SHAKE_DURATION: f32 = 0.5;
-
 /// The default speed of the ball.
 pub const DEFAULT_BALL_SPEED: f32 = 50.0;
 /// The default starting position of the ball.

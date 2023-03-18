@@ -10,8 +10,6 @@ pub mod game;
 pub mod main_menu;
 /// Components and bundles for the paddles.
 pub mod paddle;
-/// Components for screen shake calculations.
-pub mod screen_shake;
 /// Component for velocity.
 pub mod velocity;
 /// Components and bundles for the walls.

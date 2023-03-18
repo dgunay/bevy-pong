@@ -39,6 +39,8 @@ pub mod component;
 pub mod constants;
 /// Events that can be emitted by the game.
 pub mod events;
+/// Reusable plugins.
+pub mod plugins;
 /// Game states.
 pub mod states;
 
@@ -52,6 +54,7 @@ impl Plugin for PongPlugin {
             .add_startup_system(systems::spawn_camera)
             .insert_resource(Msaa::Sample4)
             .add_plugin(ShapePlugin)
+            .add_plugin(plugins::screen_shake::Plugin)
             .insert_resource(ClearColor(Color::BLACK))
             .insert_resource(LogSamplingTimer(Timer::from_seconds(
                 1.0,
@@ -75,7 +78,6 @@ impl Plugin for PongPlugin {
                     systems::move_paddles,
                     systems::apply_velocity,
                     systems::collide_ball.after(systems::apply_velocity),
-                    systems::do_screen_shake,
                     systems::detect_score,
                     systems::handle_score_event.before(systems::detect_win_condition),
                     systems::detect_win_condition,

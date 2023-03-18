@@ -17,6 +17,15 @@ pub struct Event {
     pub kind: Collision,
 }
 
+impl Clone for Event {
+    fn clone(&self) -> Self {
+        Self {
+            intensity: self.intensity,
+            kind: unsafe { std::mem::transmute_copy(&self.kind) },
+        }
+    }
+}
+
 impl Event {
     /// Creates a new collision event.
     pub fn new(kind: Collision, vel_a: Vec2, vel_b: Vec2) -> Self {

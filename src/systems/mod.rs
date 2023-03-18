@@ -18,11 +18,11 @@ use crate::{
         collider::{self, Collider},
         controls::Keyboard,
         paddle::Player,
-        screen_shake::ScreenShake,
         velocity::{self, Velocity},
     },
     constants::BALL_DEFAULT_STARTING_POSITION,
     events::score,
+    plugins::screen_shake,
 };
 
 const TIME_STEP: f32 = 1.0 / 60.0;
@@ -47,6 +47,7 @@ pub fn spawn_camera(mut commands: Commands) {
             ..Default::default()
         },
         bloom_settings,
+        screen_shake::component::Shaker::new_2d(),
     ));
 }
 
@@ -119,6 +120,7 @@ pub fn collide_ball(
     mut ball_query: Query<(&Transform, &mut Velocity), With<Ball>>,
     collider_query: Query<(Entity, &Transform, Option<&Velocity>), (With<Collider>, Without<Ball>)>,
     mut ev_writer: EventWriter<collider::Event>,
+    mut screen_shake_writer: EventWriter<screen_shake::Event>,
 ) {
     let (ball_tf, mut ball_vel) = ball_query.single_mut();
     let ball_size = ball_tf.scale.truncate();
@@ -146,11 +148,12 @@ pub fn collide_ball(
                 Collision::Inside => { /* */ }
             }
 
-            if let Some(vel) = maybe_vel {
-                ev_writer.send(collider::Event::new(collision, **vel, **ball_vel));
+            let collision_event = if let Some(vel) = maybe_vel {
+                collider::Event::new(collision, **vel, **ball_vel)
             } else {
-                ev_writer.send(collider::Event::default());
-            }
+                collider::Event::default()
+            };
+            ev_writer.send(collision_event.clone());
 
             if reflect_x {
                 ball_vel.x = -ball_vel.x;
@@ -159,6 +162,8 @@ pub fn collide_ball(
             if reflect_y {
                 ball_vel.y = -ball_vel.y;
             }
+
+            screen_shake_writer.send(screen_shake::Event::from(collision_event));
         }
     }
 }
@@ -203,36 +208,6 @@ pub fn handle_score_event(
     }
 
     ev_score.clear();
-}
-
-// TODO: vary the intensity based on the relative speed of the collision
-/// Handles collision events by shaking the screen in a decaying fashion.
-pub fn do_screen_shake(
-    mut commands: Commands,
-    mut collision_events: EventReader<collider::Event>,
-    mut shake_q: Query<(Entity, &mut ScreenShake)>,
-    mut camera_q: Query<&mut Transform, With<Camera>>,
-    time: Res<Time>,
-) {
-    if let Some(e) = collision_events.iter().next() {
-        // Begin a screen shake
-        commands.spawn(ScreenShake::from(e.clone()));
-    }
-
-    shake_q.iter_mut().for_each(|(ent, mut shake)| {
-        let mut camera_tf = camera_q.single_mut();
-
-        let (shake_x, shake_y) = shake.calculate();
-
-        if shake.done() {
-            commands.entity(ent).despawn();
-        }
-
-        camera_tf.translation.x = shake_x;
-        camera_tf.translation.y = shake_y;
-
-        shake.tick(time.delta());
-    });
 }
 
 /// Plays a sound when a collision occurs.
