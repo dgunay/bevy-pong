@@ -22,7 +22,7 @@ use crate::{
     },
     constants::BALL_DEFAULT_STARTING_POSITION,
     events::score,
-    plugins::screen_shake,
+    plugins::shake,
 };
 
 const TIME_STEP: f32 = 1.0 / 60.0;
@@ -47,7 +47,7 @@ pub fn spawn_camera(mut commands: Commands) {
             ..Default::default()
         },
         bloom_settings,
-        screen_shake::component::Shaker::new_2d(),
+        shake::component::Shaker::new_2d(),
     ));
 }
 
@@ -120,7 +120,7 @@ pub fn collide_ball(
     mut ball_query: Query<(&Transform, &mut Velocity), With<Ball>>,
     collider_query: Query<(Entity, &Transform, Option<&Velocity>), (With<Collider>, Without<Ball>)>,
     mut ev_writer: EventWriter<collider::Event>,
-    mut screen_shake_writer: EventWriter<screen_shake::Event>,
+    mut screen_shake_writer: EventWriter<shake::Event>,
 ) {
     let (ball_tf, mut ball_vel) = ball_query.single_mut();
     let ball_size = ball_tf.scale.truncate();
@@ -163,7 +163,7 @@ pub fn collide_ball(
                 ball_vel.y = -ball_vel.y;
             }
 
-            screen_shake_writer.send(screen_shake::Event::from(collision_event));
+            screen_shake_writer.send(shake::Event::from(collision_event));
         }
     }
 }

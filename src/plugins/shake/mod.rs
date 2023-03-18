@@ -1,11 +1,12 @@
+//! A plugin for shaking Transforms. You can use it for screen shake, or to
+//! shake any entity as long as it has a `Transform` component and a `Shaker`
+//! component.
+
 use std::{ops::Mul, time::Duration};
 
 use bevy::{
     ecs::system::Res,
-    prelude::{
-        App, Camera, Commands, Entity, EventReader, IntoSystemConfig, Plugin as BevyPlugin, Query,
-        Transform, With,
-    },
+    prelude::{App, Commands, Entity, EventReader, Plugin as BevyPlugin, Query, Transform},
     time::Time,
 };
 
@@ -13,14 +14,14 @@ use crate::component::collider;
 
 use self::{
     component::{Dimensions, Shake, Shaker},
-    constants::{DEFAULT_SCREEN_SHAKE_DURATION, DEFAULT_SCREEN_SHAKE_INTENSITY},
+    constants::{DEFAULT_SCREEN_SHAKE_DURATION, DEFAULT_SHAKE_INTENSITY},
 };
 
 pub mod component;
 pub mod constants;
 
-/// Add this plugin to your app to enable screen shaking. Any Camera associated
-/// with a ScreenShake component will shake when you send a screen_shake::Event.
+/// Add this plugin to your app to enable shaking entities. Any Transform associated
+/// with a Shaker component will shake when you send a screen_shake::Event.
 pub struct Plugin;
 
 impl BevyPlugin for Plugin {
@@ -43,7 +44,7 @@ pub struct Event {
 impl Default for Event {
     fn default() -> Self {
         Self {
-            intensity: DEFAULT_SCREEN_SHAKE_INTENSITY,
+            intensity: DEFAULT_SHAKE_INTENSITY,
             duration: DEFAULT_SCREEN_SHAKE_DURATION,
         }
     }
@@ -99,9 +100,9 @@ fn process_shakes(
 
 #[cfg(test)]
 mod test {
-    use bevy::prelude::{App, Camera, Camera2dBundle, Commands, Transform, Vec3, With, Without};
+    use bevy::prelude::{App, Camera2dBundle, Commands, Transform, With, Without};
 
-    use crate::plugins::screen_shake::component::Shaker;
+    use crate::plugins::shake::component::Shaker;
 
     use super::Event;
 

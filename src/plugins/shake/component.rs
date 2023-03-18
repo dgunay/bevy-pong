@@ -1,19 +1,17 @@
-use std::{ops::Mul, time::Duration};
+use std::time::Duration;
 
 use bevy::{prelude::Component, time::Timer};
 
-use crate::component::collider;
-
-use super::constants::{DEFAULT_SCREEN_SHAKE_DURATION, DEFAULT_SCREEN_SHAKE_INTENSITY};
+use super::constants::{DEFAULT_SCREEN_SHAKE_DURATION, DEFAULT_SHAKE_INTENSITY};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-/// How many dimensions the screen shake should affect.
+/// How many dimensions the shake should affect.
 pub enum Dimensions {
     Two,
     Three,
 }
 
-/// A component that marks an entity that should response to screen shake events.
+/// A component that marks an entity that should response to shake events.
 #[derive(Component)]
 pub struct Shaker(pub Dimensions);
 
@@ -93,7 +91,7 @@ impl Default for Shake {
                 DEFAULT_SCREEN_SHAKE_DURATION.as_secs_f32(),
                 bevy::time::TimerMode::Once,
             ),
-            intensity: DEFAULT_SCREEN_SHAKE_INTENSITY,
+            intensity: DEFAULT_SHAKE_INTENSITY,
         }
     }
 }

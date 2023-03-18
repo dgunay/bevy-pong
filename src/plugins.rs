@@ -1,1 +1,1 @@
-pub mod screen_shake;
+pub mod shake;

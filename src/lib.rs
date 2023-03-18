@@ -54,7 +54,7 @@ impl Plugin for PongPlugin {
             .add_startup_system(systems::spawn_camera)
             .insert_resource(Msaa::Sample4)
             .add_plugin(ShapePlugin)
-            .add_plugin(plugins::screen_shake::Plugin)
+            .add_plugin(plugins::shake::Plugin)
             .insert_resource(ClearColor(Color::BLACK))
             .insert_resource(LogSamplingTimer(Timer::from_seconds(
                 1.0,
