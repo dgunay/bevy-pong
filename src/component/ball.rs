@@ -63,7 +63,10 @@ impl Default for Bundle {
                 ..Default::default()
             },
             fill: Fill::color(Color::WHITE),
-            velocity: random_vec2().mul(DEFAULT_BALL_SPEED).into(),
+            velocity: random_vec2()
+                .mul(DEFAULT_BALL_SPEED)
+                .clamp((25.0, 25.0).into(), (100.0, 100.0).into())
+                .into(),
             ball: Ball::default(),
         }
     }

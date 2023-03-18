@@ -1,18 +1,24 @@
-use bevy::prelude::{
-    info, BuildChildren, Commands, DespawnRecursiveExt, Entity, NextState, Query, ResMut,
-    SpatialBundle, Vec2, With,
+use bevy::{
+    prelude::{
+        info, AssetServer, BuildChildren, Color, Commands, DespawnRecursiveExt, Entity, NextState,
+        Query, Res, ResMut, SpatialBundle, Vec2, With,
+    },
+    text::TextStyle,
 };
+use bevy_inspector_egui::egui::style;
 
 use crate::{
     component::{
         ball, bounding_box,
         game::Game,
         paddle::{Player, Side},
+        score::{self, Score},
         wall, Bundle,
     },
     constants::{
-        BOTTOM_WALL_POSITION, BOTTOM_WALL_SIZE, LEFT_PADDLE_STARTING_POSITION,
-        RIGHT_PADDLE_STARTING_POSITION, TOP_WALL_POSITION, TOP_WALL_SIZE, WIN_SCORE,
+        BOTTOM_WALL_POSITION, BOTTOM_WALL_SIZE, LEFT_PADDLE_STARTING_POSITION, LEFT_SCORE_POSITION,
+        RIGHT_PADDLE_STARTING_POSITION, RIGHT_SCORE_POSITION, TOP_WALL_POSITION, TOP_WALL_SIZE,
+        WIN_SCORE,
     },
     states::AppState,
 };
@@ -20,7 +26,15 @@ use crate::{
 /// Spawns all of the entities needed to play a game of Pong. They are spawned
 /// as children of a single Game entity, which makes it easier to despawn all
 /// of the entities at once when finished.
-pub fn initialize_match(mut commands: Commands) {
+pub fn initialize_match(mut commands: Commands, asset_server: Res<AssetServer>) {
+    // Score text style
+    let font = asset_server.load("fonts/NotoSansMono-Regular.ttf");
+    let score_style = TextStyle {
+        font: font.clone(),
+        font_size: 50.0,
+        color: Color::WHITE,
+    };
+
     // Create a parent Game entity to make it easier to apply setup/teardown logic
     commands
         .spawn((Game, SpatialBundle::default()))
@@ -28,6 +42,20 @@ pub fn initialize_match(mut commands: Commands) {
             // paddles
             parent.spawn(Bundle::left_player().with_position(LEFT_PADDLE_STARTING_POSITION));
             parent.spawn(Bundle::right_player().with_position(RIGHT_PADDLE_STARTING_POSITION));
+
+            // Scores
+            parent.spawn(
+                score::Bundle::default()
+                    .with_style(score_style.clone())
+                    .side(Side::Left)
+                    .at(LEFT_SCORE_POSITION),
+            );
+            parent.spawn(
+                score::Bundle::default()
+                    .with_style(score_style)
+                    .side(Side::Right)
+                    .at(RIGHT_SCORE_POSITION),
+            );
 
             // ball
             parent.spawn(ball::Bundle::default());
@@ -83,12 +111,12 @@ pub fn no_active_match(game_query: Query<Entity, With<Game>>) -> bool {
 /// Checks if a player has won the game. If a player has won, the game state
 /// transitions to the main menu.
 pub fn detect_win_condition(
-    players_query: Query<(Entity, &Player)>,
+    players_query: Query<(Entity, &Score)>,
     mut state: ResMut<NextState<AppState>>,
 ) {
     let winners: Vec<Entity> = players_query
         .iter()
-        .filter(|(_, player)| player.score >= WIN_SCORE)
+        .filter(|(_, score)| score.value >= WIN_SCORE)
         .map(|(id, _)| id)
         .collect();
 

@@ -5,13 +5,18 @@ pub const LEFT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(-100.0, 0.0);
 /// The X and Y coordinates of the right paddle's starting position.
 pub const RIGHT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(100.0, 0.0);
 
+/// The X and Y coordinates of the left player's score text starting position.
+pub const LEFT_SCORE_POSITION: Vec2 = Vec2::new(-100.0, TOP_WALL_POSITION.y + 50.0);
+/// The X and Y coordinates of the right player's score text starting position.
+pub const RIGHT_SCORE_POSITION: Vec2 = Vec2::new(100.0, TOP_WALL_POSITION.y + 50.0);
+
 /// Controls how quickly the paddles move.
 pub const PADDLE_SPEED_MULTIPLIER: f32 = 0.6;
 /// Controls the dimensions of the paddles.
 pub const PADDLE_SCALE: Vec3 = Vec3::new(20.0, 100.0, 1.0);
 
 /// The number of points a player must score to win a game.
-pub const WIN_SCORE: u64 = 1;
+pub const WIN_SCORE: u64 = 5;
 
 /// The width and height of the top wall.
 pub const TOP_WALL_SIZE: Vec2 = Vec2::new(500.0, 25.0);

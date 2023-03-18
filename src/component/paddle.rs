@@ -2,6 +2,7 @@ use bevy::{
     prelude::{Bundle as BevyBundle, Color, Component, Transform, Vec2, Vec3},
     reflect::Reflect,
     sprite::{Sprite, SpriteBundle},
+    text::{Text, TextStyle},
 };
 
 use crate::constants::PADDLE_SCALE;
@@ -9,6 +10,7 @@ use crate::constants::PADDLE_SCALE;
 use super::{
     collider::Collider,
     controls::{self, Keyboard},
+    score,
     velocity::Velocity,
 };
 
@@ -43,8 +45,6 @@ impl Default for Side {
 /// position.
 #[derive(Component, Clone, Reflect)]
 pub struct Player {
-    /// How many points the player has scored.
-    pub score: u64,
     /// The side of the screen the player is on.
     pub side: Side,
     /// The starting position of the player.
@@ -54,18 +54,13 @@ pub struct Player {
 impl Player {
     /// Creates a new player on the given side, at the given starting position.
     pub const fn new(side: Side, starting_pos: Vec2) -> Self {
-        Self {
-            score: 0,
-            side,
-            starting_pos,
-        }
+        Self { side, starting_pos }
     }
 }
 
 impl Default for Player {
     fn default() -> Self {
         Self {
-            score: 0,
             side: Side::Left,
             starting_pos: Vec2::new(0.0, 0.0),
         }

@@ -10,6 +10,8 @@ pub mod game;
 pub mod main_menu;
 /// Components and bundles for the paddles.
 pub mod paddle;
+/// Components and bundles for displaying the score.
+pub mod score;
 /// Component for velocity.
 pub mod velocity;
 /// Components and bundles for the walls.

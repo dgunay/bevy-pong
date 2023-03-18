@@ -8,6 +8,7 @@ use bevy::{
         ParamSet, Query, Res, ResMut, Resource, Transform, With, Without,
     },
     sprite::collide_aabb::{collide, Collision},
+    text::Text,
     time::{Time, Timer},
 };
 
@@ -18,6 +19,7 @@ use crate::{
         collider::{self, Collider},
         controls::Keyboard,
         paddle::Player,
+        score::Score,
         velocity::{self, Velocity},
     },
     constants::BALL_DEFAULT_STARTING_POSITION,
@@ -190,20 +192,28 @@ pub fn handle_score_event(
     mut ev_score: EventReader<score::Event>,
     mut set: ParamSet<(
         Query<(&mut Transform, &Velocity), With<Ball>>,
-        Query<(&mut Transform, &mut Player)>,
+        Query<(&mut Transform, &Player)>,
+        Query<(&mut Score, &mut Text)>,
     )>,
 ) {
     if let Some(ev) = ev_score.iter().next() {
         info!("Scored {:?}", ev);
 
-        // Reset positions
+        // Reset ball position
         set.p0().get_single_mut().unwrap().0.translation =
             (BALL_DEFAULT_STARTING_POSITION, 0.0).into();
 
-        for (mut tf, mut player) in set.p1().iter_mut() {
+        // Reset paddle positions
+        for (mut tf, player) in set.p1().iter_mut() {
             tf.translation = (player.starting_pos, 0.0).into();
+        }
 
-            ev.player_side.eq(&player.side).then(|| player.score += 1);
+        // Grant a point to the player that scored
+        if let Some((mut score, mut text)) =
+            set.p2().iter_mut().find(|(s, _)| s.side == ev.player_side)
+        {
+            score.increment();
+            text.sections[0].value = score.to_string();
         }
     }
 
