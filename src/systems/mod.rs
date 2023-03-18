@@ -135,12 +135,6 @@ pub fn collide_ball(
                 ball_tf, collider_tf, collision
             );
 
-            if let Some(vel) = maybe_vel {
-                ev_writer.send(collider::Event::new(&collision, **vel, **ball_vel));
-            } else {
-                ev_writer.send(collider::Event::default());
-            }
-
             let mut reflect_x = false;
             let mut reflect_y = false;
 
@@ -150,6 +144,12 @@ pub fn collide_ball(
                 Collision::Top => reflect_y = ball_vel.y < 0.0,
                 Collision::Bottom => reflect_y = ball_vel.y > 0.0,
                 Collision::Inside => { /* */ }
+            }
+
+            if let Some(vel) = maybe_vel {
+                ev_writer.send(collider::Event::new(collision, **vel, **ball_vel));
+            } else {
+                ev_writer.send(collider::Event::default());
             }
 
             if reflect_x {

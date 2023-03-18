@@ -17,29 +17,15 @@ pub struct Event {
     pub kind: Collision,
 }
 
-impl Clone for Event {
-    fn clone(&self) -> Self {
-        Self {
-            intensity: self.intensity,
-            // bitwise copy
-            // TODO: why isn't Collision Copy or Clone?
-            kind: unsafe { std::mem::transmute_copy(&self.kind) },
-        }
-    }
-}
-
 impl Event {
     /// Creates a new collision event.
-    pub fn new(kind: &Collision, vel_a: Vec2, vel_b: Vec2) -> Self {
+    pub fn new(kind: Collision, vel_a: Vec2, vel_b: Vec2) -> Self {
         // Relative velocity determines the intensity of the collision. If the
         // two objects are moving in the same direction, the collision is
         // less intense. If the two objects are moving in opposite directions,
         // the collision is more intense.
         let intensity = (vel_a - vel_b).length();
-        Self {
-            intensity,
-            kind: unsafe { std::mem::transmute_copy(kind) },
-        }
+        Self { intensity, kind }
     }
 }
 
@@ -62,13 +48,13 @@ mod test {
         // Two vectors moving at the same speed in opposite directions
         let vel_a = Vec2::new(5.0, 0.0);
         let vel_b = Vec2::new(-5.0, 0.0);
-        let event = Event::new(&Collision::Inside, vel_a, vel_b);
+        let event = Event::new(Collision::Inside, vel_a, vel_b);
         assert_eq!(event.intensity, 10.0);
 
         // Two vectors moving at the same speeds in the same direction
         let vel_a = Vec2::new(5.0, 0.0);
         let vel_b = Vec2::new(5.0, 0.0);
-        let event = Event::new(&Collision::Inside, vel_a, vel_b);
+        let event = Event::new(Collision::Inside, vel_a, vel_b);
         assert_eq!(event.intensity, 0.0);
 
         // Angled vectors
@@ -76,7 +62,7 @@ mod test {
         // easy
         let vel_a = Vec2::new(3.0, 4.0); // mag 5.0
         let vel_b = Vec2::new(-3.0, -4.0); // mag 5.0
-        let event = Event::new(&Collision::Inside, vel_a, vel_b);
+        let event = Event::new(Collision::Inside, vel_a, vel_b);
         assert_eq!(event.intensity, 10.0_f32);
     }
 }
