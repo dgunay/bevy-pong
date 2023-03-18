@@ -14,7 +14,7 @@ use crate::component::collider;
 
 use self::{
     component::{Dimensions, Shake, Shaker},
-    constants::{DEFAULT_SCREEN_SHAKE_DURATION, DEFAULT_SHAKE_INTENSITY},
+    constants::{DEFAULT_SHAKE_DURATION, DEFAULT_SHAKE_INTENSITY},
 };
 
 pub mod component;
@@ -34,10 +34,10 @@ impl BevyPlugin for Plugin {
 #[derive(Debug, Clone, Copy)]
 /// Send this event to start a screen shake.
 pub struct Event {
-    /// How hard the screen should shake.
+    /// How hard the shake should be.
     pub intensity: f32,
 
-    /// How long the screen should shake for.
+    /// How long the shake should last.
     pub duration: Duration,
 }
 
@@ -45,7 +45,7 @@ impl Default for Event {
     fn default() -> Self {
         Self {
             intensity: DEFAULT_SHAKE_INTENSITY,
-            duration: DEFAULT_SCREEN_SHAKE_DURATION,
+            duration: DEFAULT_SHAKE_DURATION,
         }
     }
 }
@@ -55,8 +55,8 @@ impl From<collider::Event> for Event {
     /// of the screen shake will be based on the intensity of the collision.
     fn from(e: collider::Event) -> Self {
         let intensity_factor = e.intensity / 3.0;
-        let duration = (intensity_factor * DEFAULT_SCREEN_SHAKE_DURATION.as_secs_f32())
-            .clamp(0.2, DEFAULT_SCREEN_SHAKE_DURATION.mul(2).as_secs_f32());
+        let duration = (intensity_factor * DEFAULT_SHAKE_DURATION.as_secs_f32())
+            .clamp(0.2, DEFAULT_SHAKE_DURATION.mul(2).as_secs_f32());
 
         Self {
             intensity: intensity_factor,

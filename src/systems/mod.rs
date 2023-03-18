@@ -3,9 +3,9 @@ use std::ops::Mul;
 use bevy::{
     core_pipeline::bloom::BloomSettings,
     prelude::{
-        debug, info, AssetServer, Audio, Camera, Camera2dBundle, Commands, Entity, EventReader,
-        EventWriter, Input, KeyCode, ParamSet, Query, Res, ResMut, Resource, Transform, With,
-        Without,
+        debug, info, AssetServer, Assets, Audio, AudioSink, AudioSinkPlayback, Camera,
+        Camera2dBundle, Commands, Entity, EventReader, EventWriter, Handle, Input, KeyCode,
+        ParamSet, Query, Res, ResMut, Resource, Transform, With, Without,
     },
     sprite::collide_aabb::{collide, Collision},
     time::{Time, Timer},
@@ -221,6 +221,29 @@ pub fn collision_sound(
             let sound = asset_server.load("sound/collision.ogg");
             audio.play(sound);
         }
+    }
+}
+
+#[derive(Resource)]
+pub struct MusicController(Handle<AudioSink>);
+
+pub fn start_background_music(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    audio: Res<Audio>,
+    audio_sinks: Res<Assets<AudioSink>>,
+) {
+    let music = asset_server.load("sound/bgm.ogg");
+    let handle = audio_sinks.get_handle(audio.play(music));
+    commands.insert_resource(MusicController(handle));
+}
+
+pub fn stop_background_music(
+    audio_sinks: Res<Assets<AudioSink>>,
+    music_controller: Res<MusicController>,
+) {
+    if let Some(sink) = audio_sinks.get(&music_controller.0) {
+        sink.stop();
     }
 }
 

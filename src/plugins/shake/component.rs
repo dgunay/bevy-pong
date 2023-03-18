@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use bevy::{prelude::Component, time::Timer};
 
-use super::constants::{DEFAULT_SCREEN_SHAKE_DURATION, DEFAULT_SHAKE_INTENSITY};
+use super::constants::{DEFAULT_SHAKE_DURATION, DEFAULT_SHAKE_INTENSITY};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// How many dimensions the shake should affect.
@@ -25,7 +25,7 @@ impl Shaker {
     }
 }
 
-/// A component that keeps track of screen shake.
+/// A component that keeps track of a decaying shake effect.
 #[derive(Component)]
 pub struct Shake {
     timer: Timer,
@@ -74,7 +74,7 @@ impl Shake {
             return (0.0, 0.0, 0.0);
         }
 
-        // The screen shake should fade out over the course of the timer
+        // The shake should fade out over the course of the timer
         let fade = 1.0 - self.timer.percent();
         let x = rand::random::<f32>() * self.intensity * fade;
         let y = rand::random::<f32>() * self.intensity * fade;
@@ -88,7 +88,7 @@ impl Default for Shake {
     fn default() -> Self {
         Self {
             timer: Timer::from_seconds(
-                DEFAULT_SCREEN_SHAKE_DURATION.as_secs_f32(),
+                DEFAULT_SHAKE_DURATION.as_secs_f32(),
                 bevy::time::TimerMode::Once,
             ),
             intensity: DEFAULT_SHAKE_INTENSITY,
@@ -97,8 +97,8 @@ impl Default for Shake {
 }
 
 impl From<super::Event> for Shake {
-    /// Create a screen shake from a screen shake event. The intensity and
-    /// duration of the screen shake will be based on the event.
+    /// Create a shake from a shake event. The intensity and duration of the
+    /// shake will be based on the event.
     fn from(e: super::Event) -> Self {
         Self::default()
             .with_intensity(e.intensity)

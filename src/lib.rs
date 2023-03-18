@@ -72,6 +72,7 @@ impl Plugin for PongPlugin {
             // End menu scheduling
             // Game scheduling
             .add_system(systems::initialize_match.in_schedule(OnEnter(AppState::InGame)))
+            .add_system(systems::start_background_music.in_schedule(OnEnter(AppState::InGame)))
             .add_systems(
                 (
                     systems::collision_sound,
@@ -85,6 +86,7 @@ impl Plugin for PongPlugin {
                     .in_set(OnUpdate(AppState::InGame)),
             )
             .add_system(systems::clear_active_match.in_schedule(OnExit(AppState::InGame)))
+            .add_system(systems::stop_background_music.in_schedule(OnExit(AppState::InGame)))
             // End game scheduling
             .register_type::<component::paddle::Player>()
             .register_type::<component::bounding_box::BoundingBox>();
