@@ -3,7 +3,8 @@ use std::{ops::Mul, time::Duration};
 use bevy::{
     ecs::system::Res,
     prelude::{
-        App, Camera, Commands, Entity, EventReader, Plugin as BevyPlugin, Query, Transform, With,
+        App, Camera, Commands, Entity, EventReader, IntoSystemConfig, Plugin as BevyPlugin, Query,
+        Transform, With,
     },
     time::Time,
 };
@@ -24,7 +25,8 @@ pub struct Plugin;
 
 impl BevyPlugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<Event>().add_system(do_screen_shake);
+        app.add_event::<Event>()
+            .add_systems((handle_shake_events, process_shakes));
     }
 }
 
@@ -62,20 +64,20 @@ impl From<collider::Event> for Event {
     }
 }
 
-/// Handles collision events by applying shake to transforms.
-fn do_screen_shake(
-    mut commands: Commands,
-    mut shake_events: EventReader<Event>,
-    mut shakes_q: Query<(Entity, &mut Shake)>,
-    mut camera_q: Query<(&mut Transform, &Shaker), With<Camera>>,
-    time: Res<Time>,
-) {
-    if let Some(e) = shake_events.iter().next() {
-        // Begin a screen shake
+fn handle_shake_events(mut commands: Commands, mut shake_events: EventReader<Event>) {
+    for e in shake_events.iter() {
         commands.spawn(component::Shake::from(e));
     }
+}
 
-    // Apply shakes to the transforms associated with the cameras
+/// Handles collision events by applying shake to transforms.
+fn process_shakes(
+    mut commands: Commands,
+    mut shakes_q: Query<(Entity, &mut Shake)>,
+    mut camera_q: Query<(&mut Transform, &Shaker)>,
+    time: Res<Time>,
+) {
+    // Apply shakes to the transforms associated with Shaker components.
     shakes_q.iter_mut().for_each(|(ent, mut shake)| {
         let (shake_x, shake_y, shake_z) = shake.calculate();
         if shake.done() {
@@ -97,12 +99,14 @@ fn do_screen_shake(
 
 #[cfg(test)]
 mod test {
-    use bevy::prelude::{App, Camera, Camera2dBundle, Commands, With};
+    use bevy::prelude::{App, Camera, Camera2dBundle, Commands, Transform, Vec3, With, Without};
+
+    use crate::plugins::screen_shake::component::Shaker;
 
     use super::Event;
 
     #[test]
-    fn shakes_cameras_only_with_shakers() {
+    fn shakes_only_things_with_shaker() {
         let mut app = App::new();
 
         app.add_plugins(bevy::prelude::MinimalPlugins)
@@ -112,7 +116,8 @@ mod test {
                     Camera2dBundle::default(),
                     super::component::Shaker::new_3d(),
                 ));
-                commands.spawn((Camera2dBundle::default(),));
+                commands.spawn((Transform::default(), super::component::Shaker::new_3d()));
+                commands.spawn(Transform::default());
             });
 
         app.world.send_event(Event::default());
@@ -120,14 +125,21 @@ mod test {
         app.update();
         app.update();
 
-        // The shaker camera should have moved, but the other one should not.
-        let mut camera_tfs = app
-            .world
-            .query_filtered::<&bevy::prelude::Transform, With<Camera>>();
+        // The shakers should have moved
+        let mut shakers_q = app.world.query_filtered::<&Transform, With<Shaker>>();
 
-        let tfs: Vec<_> = camera_tfs.iter(&app.world).collect();
+        let shaker_tfs: Vec<_> = shakers_q.iter(&app.world).collect();
 
-        assert_eq!(tfs.len(), 2);
-        assert_ne!(tfs[0].translation, tfs[1].translation);
+        assert_eq!(shaker_tfs.len(), 2);
+        assert_ne!(
+            shaker_tfs[0].translation,
+            Camera2dBundle::default().transform.translation
+        );
+        assert_ne!(shaker_tfs[1].translation, Transform::default().translation);
+
+        // The non-shakers should not have moved
+        let mut non_shakers_q = app.world.query_filtered::<&Transform, Without<Shaker>>();
+        let non_shaker_tf = non_shakers_q.get_single(&app.world).unwrap();
+        assert_eq!(non_shaker_tf.translation, Transform::default().translation);
     }
 }
