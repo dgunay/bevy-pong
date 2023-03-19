@@ -60,6 +60,7 @@ impl Plugin for PongPlugin {
                 1.0,
                 TimerMode::Repeating,
             )))
+            .add_plugin(plugins::window_scaling_2d::Plugin::default())
             // Game resources and state
             .add_state::<AppState>()
             .add_event::<score::Event>()

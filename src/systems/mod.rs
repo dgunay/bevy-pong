@@ -1,15 +1,18 @@
-use std::ops::Mul;
+use std::ops::{DerefMut, Mul};
 
 use bevy::{
     core_pipeline::bloom::BloomSettings,
     prelude::{
-        debug, info, AssetServer, Assets, Audio, AudioSink, AudioSinkPlayback, Camera,
-        Camera2dBundle, Commands, Entity, EventReader, EventWriter, Handle, Input, KeyCode,
-        ParamSet, Query, Res, ResMut, Resource, Transform, With, Without,
+        debug, info, AssetServer, Assets, Audio, AudioSink, AudioSinkPlayback, Camera, Camera2d,
+        Camera2dBundle, Commands, DetectChanges, Entity, EventReader, EventWriter, Handle, Input,
+        KeyCode, OrthographicProjection, ParamSet, Projection, Query, Res, ResMut, Resource,
+        Transform, With, Without,
     },
+    render::primitives::Frustum,
     sprite::collide_aabb::{collide, Collision},
     text::Text,
     time::{Time, Timer},
+    window::{Window, WindowResized},
 };
 
 use crate::{
