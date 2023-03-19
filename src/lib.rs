@@ -26,6 +26,7 @@ use bevy::{
 use bevy_prototype_lyon::prelude::ShapePlugin;
 use component::collider;
 use events::score;
+use plugins::window_scaling_2d::constants::ASPECT_RATIO_4_3;
 use states::AppState;
 use systems::LogSamplingTimer;
 
@@ -60,7 +61,10 @@ impl Plugin for PongPlugin {
                 1.0,
                 TimerMode::Repeating,
             )))
-            .add_plugin(plugins::window_scaling_2d::Plugin::default())
+            .add_plugin(
+                plugins::window_scaling_2d::Plugin::default()
+                    .with_locked_aspect_ratio(ASPECT_RATIO_4_3),
+            )
             // Game resources and state
             .add_state::<AppState>()
             .add_event::<score::Event>()
