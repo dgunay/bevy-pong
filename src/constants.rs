@@ -11,7 +11,7 @@ pub const LEFT_SCORE_POSITION: Vec2 = Vec2::new(-100.0, TOP_WALL_POSITION.y + 50
 pub const RIGHT_SCORE_POSITION: Vec2 = Vec2::new(100.0, TOP_WALL_POSITION.y + 50.0);
 
 /// Controls how quickly the paddles move.
-pub const PADDLE_SPEED_MULTIPLIER: f32 = 0.6;
+pub const PADDLE_SPEED_MULTIPLIER: f32 = 20.0;
 /// Controls the dimensions of the paddles.
 pub const PADDLE_SCALE: Vec3 = Vec3::new(20.0, 100.0, 1.0);
 

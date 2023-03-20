@@ -28,12 +28,12 @@ impl Clone for Event {
 
 impl Event {
     /// Creates a new collision event.
-    pub fn new(kind: Collision, vel_a: Vec2, vel_b: Vec2) -> Self {
+    pub fn new(kind: Collision, vel_a: impl Into<Vec2>, vel_b: impl Into<Vec2>) -> Self {
         // Relative velocity determines the intensity of the collision. If the
         // two objects are moving in the same direction, the collision is
         // less intense. If the two objects are moving in opposite directions,
         // the collision is more intense.
-        let intensity = (vel_a - vel_b).length();
+        let intensity = (vel_a.into() - vel_b.into()).length();
         Self { intensity, kind }
     }
 }
