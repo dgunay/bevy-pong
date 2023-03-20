@@ -2,7 +2,6 @@ use bevy::{
     prelude::{Bundle as BevyBundle, Color, Component, Transform, Vec2, Vec3},
     reflect::Reflect,
     sprite::{Sprite, SpriteBundle},
-    text::{Text, TextStyle},
 };
 
 use crate::constants::PADDLE_SCALE;
@@ -10,7 +9,6 @@ use crate::constants::PADDLE_SCALE;
 use super::{
     collider::Collider,
     controls::{self, Keyboard},
-    score,
     velocity::Velocity,
 };
 

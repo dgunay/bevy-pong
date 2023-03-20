@@ -6,7 +6,7 @@ use bevy::{
         debug, info, AssetServer, Assets, Audio, AudioSink, AudioSinkPlayback, Camera, Camera2d,
         Camera2dBundle, Commands, DetectChanges, Entity, EventReader, EventWriter, Handle, Input,
         KeyCode, OrthographicProjection, ParamSet, Projection, Query, Res, ResMut, Resource,
-        Transform, With, Without,
+        Transform, Vec2, With, Without,
     },
     render::primitives::Frustum,
     sprite::collide_aabb::{collide, Collision},
@@ -23,9 +23,9 @@ use crate::{
         controls::Keyboard,
         paddle::Player,
         score::Score,
-        velocity::{self, Velocity},
+        velocity::{self, Friction, Velocity},
     },
-    constants::BALL_DEFAULT_STARTING_POSITION,
+    constants::{BALL_DEFAULT_STARTING_POSITION, PADDLE_SPEED_MULTIPLIER},
     events::score,
     plugins::shake,
 };
@@ -71,47 +71,94 @@ pub fn log_game_state(
     }
 }
 
-/// Moves the paddles based on the keyboard input. If a paddle would collide
-/// with a wall, it doesn't move.
-pub fn move_paddles(
+/// Change the velocity of the paddle based on the player input
+pub fn paddle_input(
     keys: Res<Input<KeyCode>>,
-    mut query: Query<(&mut Transform, &mut Velocity, Entity, &Keyboard)>,
-    walls_query: Query<&Transform, (With<Collider>, Without<Keyboard>)>,
+    mut paddle_q: Query<(&mut Velocity, &Keyboard), With<Player>>,
 ) {
-    let walls: Vec<_> = walls_query.iter().collect();
+    keys.get_pressed().for_each(|k| {
+        for (mut vel, controls) in paddle_q.iter_mut() {
+            if let Some(new_direction) = controls.calculate_vec2(k) {
+                info!("moving! {}", new_direction);
+                *vel = new_direction.mul(PADDLE_SPEED_MULTIPLIER).into();
+            }
+        }
+    });
+}
 
-    query
+pub fn apply_friction(mut query: Query<(&mut Velocity, &Friction)>) {
+    for (mut vel, friction) in query.iter_mut() {
+        vel.apply_friction(*friction);
+    }
+}
+
+pub fn collide_paddles(
+    colliders: Query<&Transform, With<Collider>>,
+    mut paddles_q: Query<(&Transform, &mut Velocity), With<Player>>,
+) {
+    // Things that could be collided with
+    // let colliders: Vec<_> = colliders_q.iter().collect();
+
+    paddles_q
         .iter_mut()
-        .for_each(|(mut transform, mut vel, _id, controls)| {
-            // info!("Player {:?}: {:?}", id, transform);
-            keys.get_pressed().for_each(|k| {
-                if let Some(new_pos) = controls.calculate_new_pos(*k, transform.as_ref()) {
-                    // if it would collide with a wall, don't move
-                    if walls.iter().any(|wall| {
-                        collide(
-                            wall.translation,
-                            wall.scale.truncate(),
-                            new_pos,
-                            transform.scale.truncate(),
-                        )
-                        // We do want to allow an out if clipping occurs
-                        .filter(|c| c != &Collision::Inside)
-                        .is_some()
-                    }) {
-                        return;
-                    }
+        .for_each(|(paddle_tf, mut paddle_vel)| {
+            let new_pos = {
+                let mut tf = paddle_tf.clone();
+                tf.translation = paddle_vel
+                    .new_position(tf.translation.truncate())
+                    .extend(0.0);
+                tf
+            };
 
-                    // info!("Moving {:?} to {:?}", id, new_pos);
-                    *vel = controls.to_velocity(*k);
-                    transform.translation = new_pos;
+            // if it would collide with a collider, reverse its velocity in the
+            // direction of the collision
+            colliders.iter().for_each(|collider| {
+                let new_vel = velocity_after_collision(&new_pos, *paddle_vel, collider);
+
+                if new_vel != *paddle_vel {
+                    *paddle_vel = new_vel;
                 }
             });
         });
 }
 
-/// Changes the position of the ball based on its velocity.
-pub fn apply_velocity(mut ball_query: Query<(&mut Transform, &velocity::Velocity)>) {
-    ball_query.iter_mut().for_each(|(mut tf, vel)| {
+fn velocity_after_collision(
+    mover_new_pos: &Transform,
+    mut mover_vel: Velocity,
+    collider_tf: &Transform,
+) -> Velocity {
+    let mut reflect_x = false;
+    let mut reflect_y = false;
+
+    if let Some(collision) = collide(
+        collider_tf.translation,
+        collider_tf.scale.truncate(),
+        mover_new_pos.translation,
+        mover_new_pos.scale.truncate(),
+    ) {
+        match collision {
+            Collision::Left => reflect_x = mover_vel.x > 0.0,
+            Collision::Right => reflect_x = mover_vel.x < 0.0,
+            Collision::Top => reflect_y = mover_vel.y < 0.0,
+            Collision::Bottom => reflect_y = mover_vel.y > 0.0,
+            Collision::Inside => { /* */ }
+        }
+    }
+
+    if reflect_x {
+        mover_vel.x = -mover_vel.x;
+    }
+
+    if reflect_y {
+        mover_vel.y = -mover_vel.y;
+    }
+
+    mover_vel
+}
+
+/// Changes the position of entities that have a Velocity component.
+pub fn apply_velocity(mut mover_q: Query<(&mut Transform, &Velocity)>) {
+    mover_q.iter_mut().for_each(|(mut tf, vel)| {
         let new_xy = vel.mul(TIME_STEP);
 
         tf.translation.x += new_xy.x;
@@ -119,8 +166,9 @@ pub fn apply_velocity(mut ball_query: Query<(&mut Transform, &velocity::Velocity
     });
 }
 
-/// Checks if the ball collides with a Collider. If it does, it sends a collision
-/// event and reflects the ball according to the collision angle.
+// TODO: remove if not used
+// /// Checks if the ball collides with a Collider. If it does, it sends a collision
+// /// event and reflects the ball according to the collision angle.
 pub fn collide_ball(
     mut ball_query: Query<(&Transform, &mut Velocity), With<Ball>>,
     collider_query: Query<(Entity, &Transform, Option<&Velocity>), (With<Collider>, Without<Ball>)>,
@@ -275,7 +323,7 @@ mod test {
 
         Test {
             setup: |app| {
-                app.add_system(collide_ball);
+                app.add_system(apply_velocity).add_system(collide_ball);
                 app.world
                     .spawn(Bundle::default().with_position(Vec2::new(10.0, 0.0)));
                 app.world
