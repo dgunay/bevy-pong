@@ -12,6 +12,7 @@ use bevy::{
     sprite::collide_aabb::{collide, Collision},
     text::Text,
     time::{Time, Timer},
+    utils::HashMap,
     window::{Window, WindowResized},
 };
 
@@ -72,17 +73,33 @@ pub fn log_game_state(
 /// Change the velocity of the paddle based on the player input
 pub fn paddle_input(
     keys: Res<Input<KeyCode>>,
-    mut paddle_q: Query<(&mut Velocity, &Keyboard), With<Player>>,
+    mut paddle_q: Query<(Entity, &mut Velocity, &Keyboard), With<Player>>,
 ) {
-    // TODO: allow diagonals
-    keys.get_pressed().for_each(|k| {
-        for (mut vel, controls) in paddle_q.iter_mut() {
-            if let Some(new_direction) = controls.calculate_vec2(k) {
-                info!("moving! {}", new_direction);
-                *vel = new_direction.mul(PADDLE_SPEED_MULTIPLIER).into();
-            }
+    let mut player_vecs: HashMap<Entity, Vec<Vec2>> = HashMap::new();
+    // Map Entity ID to the set of Vec2s produced by the key inputs
+    for (entity, _, controls) in paddle_q.iter_mut() {
+        let vecs: Vec<Vec2> = keys
+            .get_pressed()
+            .map(|k| controls.calculate_vec2(k))
+            .flat_map(|v| v)
+            .collect();
+        if !vecs.is_empty() {
+            player_vecs.insert(entity, vecs);
         }
-    });
+    }
+
+    // Blend the inputs into a single Vec2 for each paddle, to allow for
+    // diagonal movement
+    for (entity, mut vel, _) in paddle_q.iter_mut() {
+        player_vecs
+            .get(&entity)
+            .map(|vecs| {
+                vecs.iter()
+                    .fold(Vec2::ZERO, |acc, v| acc + *v)
+                    .mul(PADDLE_SPEED_MULTIPLIER)
+            })
+            .map(|v| *vel = v.into());
+    }
 }
 
 pub fn apply_friction(mut query: Query<(&mut Velocity, &Friction)>) {
@@ -378,7 +395,7 @@ mod test {
 
         Test {
             setup: |app| {
-                app.add_systems((move_ball, collide_paddles));
+                app.add_system(move_ball);
                 app.world
                     .spawn(wall::Bundle::default().at(Vec2::new(10.0, 0.0)));
                 let mut paddle_bundle = paddle::Bundle::default();
