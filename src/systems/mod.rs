@@ -310,8 +310,6 @@ pub fn stop_background_music(
 
 #[cfg(test)]
 mod test {
-    use bevy::prelude::Vec2;
-
     use crate::{
         component::{ball, Bundle},
         tests::helpers::{default_setup_graphics, Test},
@@ -323,7 +321,10 @@ mod test {
 
         Test {
             setup: |app| {
-                app.add_system(apply_velocity).add_system(collide_ball);
+                app.add_event::<collider::Event>()
+                    .add_event::<shake::Event>()
+                    .add_system(apply_velocity)
+                    .add_system(collide_ball);
                 app.world
                     .spawn(Bundle::default().with_position(Vec2::new(10.0, 0.0)));
                 app.world
