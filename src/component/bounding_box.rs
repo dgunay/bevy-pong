@@ -10,16 +10,14 @@ use super::{collider::Collider, paddle::Side};
 
 /// A component that is used to mark an entity as being able to detect scores.
 #[derive(BevyComponent, Clone, Default)]
-pub struct Detector;
+pub struct ScoreDetector;
 
 /// A bounding box is a rectangular area that is used to determine if an entity is
 /// within a certain area.
 #[derive(BevyBundle)]
 pub struct Bundle {
     pub sprite: SpriteBundle,
-    pub detector: Detector,
     pub bounding_box: BoundingBox,
-    collider: Collider,
 }
 
 // TODO: this component probably doesn't need to be its own thing
@@ -74,8 +72,6 @@ impl Default for Bundle {
                 ..Default::default()
             },
             bounding_box: BoundingBox::default(),
-            detector: Detector::default(),
-            collider: Collider::default(),
         }
     }
 }
@@ -94,6 +90,15 @@ pub fn is_outside_bounds(bounds: &Transform, entity: &Transform) -> bool {
 /// Returns true if the entity is inside the bounds of the bounding box.
 pub fn is_inside_bounds(bounds: &Transform, entity: &Transform) -> bool {
     !is_outside_bounds(bounds, entity)
+}
+
+pub fn is_completely_inside_bounds(bounds: &Transform, entity: &Transform) -> bool {
+    collide(
+        bounds.translation,
+        bounds.scale.truncate(),
+        entity.translation,
+        entity.scale.truncate(),
+    ) == Some(bevy::sprite::collide_aabb::Collision::Inside)
 }
 
 #[cfg(test)]
