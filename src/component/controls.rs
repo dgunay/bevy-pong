@@ -30,10 +30,10 @@ impl Keyboard {
 
     pub fn calculate_vec3(&self, k: &KeyCode) -> Option<Vec3> {
         match k {
-            k if *k == self.up => Some(Vec3::new(0.0, 1.0, 0.0)),
-            k if *k == self.down => Some(Vec3::new(0.0, -1.0, 0.0)),
-            k if *k == self.left => Some(Vec3::new(-1.0, 0.0, 0.0)),
-            k if *k == self.right => Some(Vec3::new(1.0, 0.0, 0.0)),
+            k if *k == self.up => Some(Vec3::Y),
+            k if *k == self.down => Some(Vec3::NEG_Y),
+            k if *k == self.left => Some(Vec3::NEG_X),
+            k if *k == self.right => Some(Vec3::X),
             // else do nothing
             _ => None,
         }

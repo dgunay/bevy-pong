@@ -5,13 +5,15 @@ pub const LEFT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(-100.0, 0.0);
 /// The X and Y coordinates of the right paddle's starting position.
 pub const RIGHT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(100.0, 0.0);
 
+pub const PADDLE_DEFAULT_FRICTION: f32 = 1.0;
+
 /// The X and Y coordinates of the left player's score text starting position.
 pub const LEFT_SCORE_POSITION: Vec2 = Vec2::new(-100.0, TOP_WALL_POSITION.y + 50.0);
 /// The X and Y coordinates of the right player's score text starting position.
 pub const RIGHT_SCORE_POSITION: Vec2 = Vec2::new(100.0, TOP_WALL_POSITION.y + 50.0);
 
 /// Controls how quickly the paddles move.
-pub const PADDLE_SPEED_MULTIPLIER: f32 = 20.0;
+pub const PADDLE_SPEED_MULTIPLIER: f32 = 40.0;
 /// Controls the dimensions of the paddles.
 pub const PADDLE_SCALE: Vec3 = Vec3::new(20.0, 100.0, 1.0);
 
@@ -35,3 +37,5 @@ pub const BALL_DEFAULT_STARTING_POSITION: Vec2 = Vec2::new(0.0, 0.0);
 /// The dimensions of the ball.
 // TODO: can we make the ball more like a circle for collision purposes?
 pub const BALL_SCALE: Vec3 = Vec3::new(15.0, 15.0, 15.0);
+
+pub const TIME_STEP: f32 = 1.0 / 60.0;

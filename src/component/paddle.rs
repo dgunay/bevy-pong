@@ -4,12 +4,12 @@ use bevy::{
     sprite::{Sprite, SpriteBundle},
 };
 
-use crate::constants::PADDLE_SCALE;
+use crate::constants::{PADDLE_DEFAULT_FRICTION, PADDLE_SCALE};
 
 use super::{
     collider::Collider,
     controls::{self, Keyboard},
-    velocity::Velocity,
+    velocity::{Friction, Velocity},
 };
 
 /// A side of the screen. Used mainly for identifying who scored.
@@ -72,17 +72,19 @@ impl Default for Player {
 pub struct Bundle {
     #[bundle]
     /// Controls the position and look of the paddle.
-    sprite: SpriteBundle,
+    pub sprite: SpriteBundle,
 
     /// Defines the input controls for the paddle. Used to segregate controls
     /// per player.
-    controls: Keyboard,
+    pub controls: Keyboard,
 
-    collider: Collider,
+    pub collider: Collider,
 
-    velocity: Velocity,
+    pub velocity: Velocity,
 
-    player: Player,
+    pub friction: Friction,
+
+    pub player: Player,
 }
 
 impl Bundle {
@@ -112,6 +114,12 @@ impl Bundle {
         self.player.starting_pos = pos;
         self
     }
+
+    #[must_use]
+    pub fn with_friction(mut self, friction: Friction) -> Self {
+        self.friction = friction;
+        self
+    }
 }
 
 impl Default for Bundle {
@@ -135,6 +143,7 @@ impl Default for Bundle {
             collider: Collider::default(),
             player: Player::default(),
             velocity: Velocity::default(),
+            friction: Friction(PADDLE_DEFAULT_FRICTION),
         }
     }
 }
