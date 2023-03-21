@@ -25,12 +25,10 @@ use crate::{
         score::Score,
         velocity::{self, Friction, Velocity},
     },
-    constants::{BALL_DEFAULT_STARTING_POSITION, PADDLE_SPEED_MULTIPLIER},
+    constants::{BALL_DEFAULT_STARTING_POSITION, PADDLE_SPEED_MULTIPLIER, TIME_STEP},
     events::score,
     plugins::shake,
 };
-
-const TIME_STEP: f32 = 1.0 / 60.0;
 
 mod game;
 mod main_menu;
@@ -76,6 +74,7 @@ pub fn paddle_input(
     keys: Res<Input<KeyCode>>,
     mut paddle_q: Query<(&mut Velocity, &Keyboard), With<Player>>,
 ) {
+    // TODO: allow diagonals
     keys.get_pressed().for_each(|k| {
         for (mut vel, controls) in paddle_q.iter_mut() {
             if let Some(new_direction) = controls.calculate_vec2(k) {
@@ -93,15 +92,15 @@ pub fn apply_friction(mut query: Query<(&mut Velocity, &Friction)>) {
 }
 
 pub fn collide_paddles(
-    colliders: Query<&Transform, With<Collider>>,
-    mut paddles_q: Query<(&Transform, &mut Velocity), With<Player>>,
+    colliders: Query<(Entity, &Transform), With<Collider>>,
+    mut paddles_q: Query<(Entity, &Transform, &mut Velocity), With<Player>>,
 ) {
     // Things that could be collided with
     // let colliders: Vec<_> = colliders_q.iter().collect();
 
     paddles_q
         .iter_mut()
-        .for_each(|(paddle_tf, mut paddle_vel)| {
+        .for_each(|(paddle_id, paddle_tf, mut paddle_vel)| {
             let new_pos = {
                 let mut tf = paddle_tf.clone();
                 tf.translation = paddle_vel
@@ -112,21 +111,25 @@ pub fn collide_paddles(
 
             // if it would collide with a collider, reverse its velocity in the
             // direction of the collision
-            colliders.iter().for_each(|collider| {
-                let new_vel = velocity_after_collision(&new_pos, *paddle_vel, collider);
+            colliders
+                .iter()
+                .filter(|(id, _)| *id != paddle_id)
+                .for_each(|(_, collider)| {
+                    let new_vel = check_collision(&new_pos, *paddle_vel, collider);
 
-                if new_vel != *paddle_vel {
-                    *paddle_vel = new_vel;
-                }
-            });
+                    if let Some(new_vel) = new_vel {
+                        info!("collided with paddle!");
+                        *paddle_vel = new_vel;
+                    }
+                });
         });
 }
 
-fn velocity_after_collision(
+fn check_collision(
     mover_new_pos: &Transform,
     mut mover_vel: Velocity,
     collider_tf: &Transform,
-) -> Velocity {
+) -> Option<Velocity> {
     let mut reflect_x = false;
     let mut reflect_y = false;
 
@@ -143,26 +146,34 @@ fn velocity_after_collision(
             Collision::Bottom => reflect_y = mover_vel.y > 0.0,
             Collision::Inside => { /* */ }
         }
-    }
 
-    if reflect_x {
-        mover_vel.x = -mover_vel.x;
-    }
+        if reflect_x {
+            mover_vel.x = -mover_vel.x;
+        }
 
-    if reflect_y {
-        mover_vel.y = -mover_vel.y;
-    }
+        if reflect_y {
+            mover_vel.y = -mover_vel.y;
+        }
 
-    mover_vel
+        Some(mover_vel)
+    } else {
+        None
+    }
 }
 
 /// Changes the position of entities that have a Velocity component.
 pub fn apply_velocity(mut mover_q: Query<(&mut Transform, &Velocity)>) {
     mover_q.iter_mut().for_each(|(mut tf, vel)| {
-        let new_xy = vel.mul(TIME_STEP);
+        let mut scaled_vel = vel.mul(TIME_STEP);
+        info!("moving {:?} by {:?}", tf.translation, scaled_vel);
 
-        tf.translation.x += new_xy.x;
-        tf.translation.y += new_xy.y;
+        // If the velocity is too small, don't move it at all
+        if scaled_vel.length() < 0.05 {
+            scaled_vel = Vec2::ZERO;
+        }
+
+        tf.translation.x += scaled_vel.x;
+        tf.translation.y += scaled_vel.y;
     });
 }
 
@@ -311,7 +322,7 @@ pub fn stop_background_music(
 #[cfg(test)]
 mod test {
     use crate::{
-        component::{ball, Bundle},
+        component::{ball, paddle, Bundle},
         tests::helpers::{default_setup_graphics, Test},
     };
 
@@ -342,6 +353,33 @@ mod test {
 
                 // x should be negative, because the ball should have bounced off the paddle
                 assert!(ball_tf.translation.x < 0.0);
+            },
+        }
+        .run();
+    }
+
+    #[test]
+    fn apply_velocity_to_paddles_test() {
+        use super::*;
+
+        Test {
+            setup: |app| {
+                app.add_system(apply_velocity);
+                let mut paddle_bundle = paddle::Bundle::default();
+                paddle_bundle.velocity = Vec2::new(5.0, 0.0).into();
+                app.world.spawn(paddle_bundle).id()
+            },
+            setup_graphics: default_setup_graphics,
+            frames: 5,
+            check: |app, paddle_id| {
+                let paddle_tf = app.world.get::<Transform>(paddle_id).unwrap();
+
+                // y and z should be unchanged
+                assert_eq!(paddle_tf.translation.y, 0.0);
+                assert_eq!(paddle_tf.translation.z, 0.0);
+
+                // x should be positive, because the paddle should have moved to the right
+                assert!(paddle_tf.translation.x > 0.0);
             },
         }
         .run();

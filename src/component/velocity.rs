@@ -6,7 +6,11 @@ pub struct Velocity(Vec2);
 
 impl Velocity {
     pub fn apply_friction(&mut self, friction: impl Into<Friction>) {
-        self.0 *= friction.into().0;
+        // Move towards zero vector according to the friction value.
+        let friction = friction.into().0;
+        let friction = Vec2::new(friction, friction);
+        let friction = friction * self.0.signum();
+        self.0 -= friction;
     }
 
     pub fn new_position(&self, starting_from: Vec2) -> Vec2 {

@@ -18,13 +18,14 @@
 //! - Dynamic screen shake based on relative speed of colliding objects
 use bevy::{
     prelude::{
-        App, ClearColor, Color, IntoSystemAppConfig, IntoSystemConfig, IntoSystemConfigs, KeyCode,
-        Msaa, OnEnter, OnExit, OnUpdate, Plugin,
+        App, ClearColor, Color, FixedTime, IntoSystemAppConfig, IntoSystemConfig,
+        IntoSystemConfigs, KeyCode, Msaa, OnEnter, OnExit, OnUpdate, Plugin,
     },
     time::{Timer, TimerMode},
 };
 use bevy_prototype_lyon::prelude::ShapePlugin;
 use component::collider;
+use constants::TIME_STEP;
 use events::score;
 use plugins::window_scaling_2d::constants::ASPECT_RATIO_4_3;
 use states::AppState;
@@ -65,6 +66,7 @@ impl Plugin for PongPlugin {
                 plugins::window_scaling_2d::Plugin::default()
                     .with_locked_aspect_ratio(ASPECT_RATIO_4_3),
             )
+            .insert_resource(FixedTime::new_from_secs(TIME_STEP))
             // Game resources and state
             .add_state::<AppState>()
             .add_event::<score::Event>()
@@ -85,6 +87,7 @@ impl Plugin for PongPlugin {
                     systems::collide_ball,
                     systems::collide_paddles,
                     systems::apply_velocity.after(systems::collide_paddles),
+                    systems::apply_friction,
                     systems::detect_score,
                     systems::handle_score_event.before(systems::detect_win_condition),
                     systems::detect_win_condition,

@@ -13,6 +13,7 @@ use crate::{
         game::Game,
         paddle::{Player, Side},
         score::{self, Score},
+        velocity::Friction,
         wall, Bundle,
     },
     constants::{
