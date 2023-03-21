@@ -50,18 +50,18 @@ pub fn initialize_match(mut commands: Commands, asset_server: Res<AssetServer>) 
                 bounding_box::Bundle::default()
                     .with_visibility(bevy::prelude::Visibility::Visible)
                     .with_dimensions(TOP_WALL_SIZE.x / 2.0, 500.0)
-                    .with_position(Vec2::new(-175.0, 0.0))
+                    .with_position(Vec2::new(-125.0, 0.0))
                     .on_side(Side::Left),
             );
             parent.spawn(
                 bounding_box::Bundle::default()
                     .with_visibility(bevy::prelude::Visibility::Visible)
                     .with_dimensions(TOP_WALL_SIZE.x / 2.0, 500.0)
-                    .with_position(Vec2::new(175.0, 0.0))
+                    .with_position(Vec2::new(125.0, 0.0))
                     .on_side(Side::Right),
             );
 
-            // Scores
+            // Score counters
             parent.spawn(
                 score::Bundle::default()
                     .with_style(score_style.clone())
