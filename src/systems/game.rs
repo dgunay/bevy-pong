@@ -10,6 +10,7 @@ use bevy_inspector_egui::egui::style;
 use crate::{
     component::{
         ball, bounding_box,
+        collider::Collider,
         game::Game,
         paddle::{Player, Side},
         score::{self, Score},
@@ -44,6 +45,22 @@ pub fn initialize_match(mut commands: Commands, asset_server: Res<AssetServer>) 
             parent.spawn(Bundle::left_player().with_position(LEFT_PADDLE_STARTING_POSITION));
             parent.spawn(Bundle::right_player().with_position(RIGHT_PADDLE_STARTING_POSITION));
 
+            // Paddle bounding boxes
+            parent.spawn(
+                bounding_box::Bundle::default()
+                    .with_visibility(bevy::prelude::Visibility::Visible)
+                    .with_dimensions(TOP_WALL_SIZE.x / 2.0, 500.0)
+                    .with_position(Vec2::new(-175.0, 0.0))
+                    .on_side(Side::Left),
+            );
+            parent.spawn(
+                bounding_box::Bundle::default()
+                    .with_visibility(bevy::prelude::Visibility::Visible)
+                    .with_dimensions(TOP_WALL_SIZE.x / 2.0, 500.0)
+                    .with_position(Vec2::new(175.0, 0.0))
+                    .on_side(Side::Right),
+            );
+
             // Scores
             parent.spawn(
                 score::Bundle::default()
@@ -62,20 +79,24 @@ pub fn initialize_match(mut commands: Commands, asset_server: Res<AssetServer>) 
             parent.spawn(ball::Bundle::default());
 
             // score zones
-            parent.spawn(
+            parent.spawn((
                 bounding_box::Bundle::default()
                     .with_visibility(bevy::prelude::Visibility::Visible)
                     .with_dimensions(25.0, 500.0)
                     .with_position(Vec2::new(-250.0, 0.0))
                     .on_side(Side::Left),
-            );
-            parent.spawn(
+                Collider::default(),
+                bounding_box::ScoreDetector,
+            ));
+            parent.spawn((
                 bounding_box::Bundle::default()
                     .with_visibility(bevy::prelude::Visibility::Visible)
                     .with_dimensions(25.0, 500.0)
                     .with_position(Vec2::new(250.0, 0.0))
                     .on_side(Side::Right),
-            );
+                Collider::default(),
+                bounding_box::ScoreDetector,
+            ));
 
             // top and bottom walls
             parent.spawn(

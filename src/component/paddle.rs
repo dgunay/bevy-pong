@@ -7,6 +7,7 @@ use bevy::{
 use crate::constants::{PADDLE_DEFAULT_FRICTION, PADDLE_SCALE};
 
 use super::{
+    bounding_box,
     collider::Collider,
     controls::{self, Keyboard},
     velocity::{Friction, Velocity},
@@ -68,22 +69,21 @@ impl Default for Player {
 /// A bundle that contains all the components needed to create a paddle. Includes
 /// a `SpriteBundle` for visual appearance and position, a `KeyboardControls` for
 /// input, is a Collider, has a Velocity, and includes a Player component.
-#[derive(Clone, BevyBundle)]
+#[derive(BevyBundle)]
 pub struct Bundle {
     #[bundle]
     /// Controls the position and look of the paddle.
     pub sprite: SpriteBundle,
-
     /// Defines the input controls for the paddle. Used to segregate controls
     /// per player.
     pub controls: Keyboard,
-
+    /// Identifies the paddle as something that can be collided with.
     pub collider: Collider,
-
+    /// Defines the velocity of the paddle.
     pub velocity: Velocity,
-
+    /// Defines the rate at which the paddle comes to a stop when not being moved.
     pub friction: Friction,
-
+    /// Identifies the paddle as a player.
     pub player: Player,
 }
 

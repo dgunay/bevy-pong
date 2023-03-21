@@ -18,7 +18,7 @@ use bevy::{
 use crate::{
     component::{
         ball::Ball,
-        bounding_box::{self, is_inside_bounds, BoundingBox},
+        bounding_box::{self, is_completely_inside_bounds, is_inside_bounds, BoundingBox},
         collider::{self, Collider},
         controls::Keyboard,
         paddle::Player,
@@ -91,40 +91,6 @@ pub fn apply_friction(mut query: Query<(&mut Velocity, &Friction)>) {
     }
 }
 
-pub fn collide_paddles(
-    colliders: Query<(Entity, &Transform), With<Collider>>,
-    mut paddles_q: Query<(Entity, &Transform, &mut Velocity), With<Player>>,
-) {
-    // Things that could be collided with
-    // let colliders: Vec<_> = colliders_q.iter().collect();
-
-    paddles_q
-        .iter_mut()
-        .for_each(|(paddle_id, paddle_tf, mut paddle_vel)| {
-            let new_pos = {
-                let mut tf = paddle_tf.clone();
-                tf.translation = paddle_vel
-                    .new_position(tf.translation.truncate())
-                    .extend(0.0);
-                tf
-            };
-
-            // if it would collide with a collider, reverse its velocity in the
-            // direction of the collision
-            colliders
-                .iter()
-                .filter(|(id, _)| *id != paddle_id)
-                .for_each(|(_, collider)| {
-                    let new_vel = check_collision(&new_pos, *paddle_vel, collider);
-
-                    if let Some(new_vel) = new_vel {
-                        info!("collided with paddle!");
-                        *paddle_vel = new_vel;
-                    }
-                });
-        });
-}
-
 fn check_collision(
     mover_new_pos: &Transform,
     mut mover_vel: Velocity,
@@ -144,7 +110,7 @@ fn check_collision(
             Collision::Right => reflect_x = mover_vel.x < 0.0,
             Collision::Top => reflect_y = mover_vel.y < 0.0,
             Collision::Bottom => reflect_y = mover_vel.y > 0.0,
-            Collision::Inside => { /* */ }
+            Collision::Inside => {}
         }
 
         if reflect_x {
@@ -161,19 +127,40 @@ fn check_collision(
     }
 }
 
-/// Changes the position of entities that have a Velocity component.
-pub fn apply_velocity(mut mover_q: Query<(&mut Transform, &Velocity)>) {
-    mover_q.iter_mut().for_each(|(mut tf, vel)| {
+/// Changes the position of the ball according to its velocity
+pub fn move_ball(mut ball_q: Query<(&mut Transform, &Velocity), With<Ball>>) {
+    ball_q.iter_mut().for_each(|(mut tf, vel)| {
         let mut scaled_vel = vel.mul(TIME_STEP);
         info!("moving {:?} by {:?}", tf.translation, scaled_vel);
 
-        // If the velocity is too small, don't move it at all
-        if scaled_vel.length() < 0.05 {
-            scaled_vel = Vec2::ZERO;
-        }
-
         tf.translation.x += scaled_vel.x;
         tf.translation.y += scaled_vel.y;
+    });
+}
+
+pub fn move_paddles(
+    mut paddle_q: Query<(&mut Transform, &Velocity, &Player), Without<BoundingBox>>,
+    bounds: Query<(&Transform, &BoundingBox)>,
+) {
+    paddle_q.iter_mut().for_each(|(mut tf, vel, player)| {
+        let scaled_vel = vel.mul(TIME_STEP);
+        info!("moving {:?} by {:?}", tf.translation, scaled_vel);
+
+        let new_pos = {
+            let mut tf = tf.clone();
+            tf.translation = tf.translation + scaled_vel.extend(0.0);
+            tf
+        };
+
+        bounds
+            .iter()
+            .find(|(_, bb)| bb.side == player.side)
+            .map(|(bounds_tf, _)| {
+                if is_completely_inside_bounds(bounds_tf, &new_pos) {
+                    tf.translation.x += scaled_vel.x;
+                    tf.translation.y += scaled_vel.y;
+                }
+            });
     });
 }
 
@@ -236,7 +223,7 @@ pub fn collide_ball(
 /// based on the side of the score zone.
 pub fn detect_score(
     ball_query: Query<&Transform, With<Ball>>,
-    score_zones: Query<(&Transform, &BoundingBox), With<bounding_box::Detector>>,
+    score_zones: Query<(&Transform, &BoundingBox), With<bounding_box::ScoreDetector>>,
     mut ev_score: EventWriter<score::Event>,
 ) {
     let ball_tf = ball_query.single();
@@ -322,7 +309,7 @@ pub fn stop_background_music(
 #[cfg(test)]
 mod test {
     use crate::{
-        component::{ball, paddle, Bundle},
+        component::{ball, paddle, wall, Bundle},
         tests::helpers::{default_setup_graphics, Test},
     };
 
@@ -334,7 +321,7 @@ mod test {
             setup: |app| {
                 app.add_event::<collider::Event>()
                     .add_event::<shake::Event>()
-                    .add_system(apply_velocity)
+                    .add_system(move_ball)
                     .add_system(collide_ball);
                 app.world
                     .spawn(Bundle::default().with_position(Vec2::new(10.0, 0.0)));
@@ -364,7 +351,7 @@ mod test {
 
         Test {
             setup: |app| {
-                app.add_system(apply_velocity);
+                app.add_system(move_ball);
                 let mut paddle_bundle = paddle::Bundle::default();
                 paddle_bundle.velocity = Vec2::new(5.0, 0.0).into();
                 app.world.spawn(paddle_bundle).id()
@@ -380,6 +367,35 @@ mod test {
 
                 // x should be positive, because the paddle should have moved to the right
                 assert!(paddle_tf.translation.x > 0.0);
+            },
+        }
+        .run();
+    }
+
+    #[test]
+    fn paddles_dont_clip_through_walls() {
+        use super::*;
+
+        Test {
+            setup: |app| {
+                app.add_systems((move_ball, collide_paddles));
+                app.world
+                    .spawn(wall::Bundle::default().at(Vec2::new(10.0, 0.0)));
+                let mut paddle_bundle = paddle::Bundle::default();
+                paddle_bundle.velocity = Vec2::new(5.0, 0.0).into();
+                app.world.spawn(paddle_bundle).id()
+            },
+            setup_graphics: default_setup_graphics,
+            frames: 5,
+            check: |app, paddle_id| {
+                let paddle_tf = app.world.get::<Transform>(paddle_id).unwrap();
+
+                // y and z should be unchanged
+                assert_eq!(paddle_tf.translation.y, 0.0);
+                assert_eq!(paddle_tf.translation.z, 0.0);
+
+                // x should be 10.0, because the paddle should have hit the wall and stopped
+                assert_eq!(paddle_tf.translation.x, 10.0);
             },
         }
         .run();
