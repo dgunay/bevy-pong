@@ -115,7 +115,7 @@ impl Bundle {
     }
 
     #[must_use]
-    pub fn with_friction(mut self, friction: Friction) -> Self {
+    pub const fn with_friction(mut self, friction: Friction) -> Self {
         self.friction = friction;
         self
     }

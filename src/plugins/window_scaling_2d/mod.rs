@@ -7,8 +7,8 @@
 use self::resources::AspectRatio;
 use bevy::{
     prelude::{
-        debug, App, Camera2d, DetectChanges,
-        OrthographicProjection, Plugin as BevyPlugin, Query, Res, With,
+        debug, App, Camera2d, DetectChanges, OrthographicProjection, Plugin as BevyPlugin, Query,
+        Res, With,
     },
     window::Window,
 };
@@ -31,7 +31,7 @@ impl Plugin {
     /// If you want to also lock the display to an aspect ratio, you can set it
     /// here. If you don't set it, the width of the window may be freely
     /// resized by the user.
-    pub fn with_locked_aspect_ratio(mut self, aspect_ratio: AspectRatio) -> Self {
+    pub const fn with_locked_aspect_ratio(mut self, aspect_ratio: AspectRatio) -> Self {
         self.aspect_ratio = Some(aspect_ratio);
         self
     }

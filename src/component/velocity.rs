@@ -24,12 +24,6 @@ impl From<Vec2> for Velocity {
     }
 }
 
-impl Into<Vec2> for Velocity {
-    fn into(self) -> Vec2 {
-        self.0
-    }
-}
-
 /// Represents an entity's friction, their reduction in velocity over time.
 #[derive(Debug, Default, Clone, Copy, Deref, DerefMut, Component)]
 pub struct Friction(pub f32);

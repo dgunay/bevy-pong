@@ -17,12 +17,12 @@ impl Bundle {
         self
     }
 
-    pub fn side(mut self, side: Side) -> Self {
+    pub const fn side(mut self, side: Side) -> Self {
         self.score.side = side;
         self
     }
 
-    pub fn at(mut self, position: Vec2) -> Self {
+    pub const fn at(mut self, position: Vec2) -> Self {
         self.text.transform.translation = position.extend(0.0);
         self
     }
@@ -48,7 +48,7 @@ pub struct Score {
 }
 
 impl Score {
-    pub fn new(value: u64, side: Side) -> Self {
+    pub const fn new(value: u64, side: Side) -> Self {
         Self { value, side }
     }
 

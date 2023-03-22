@@ -16,11 +16,11 @@ pub enum Dimensions {
 pub struct Shaker(pub Dimensions);
 
 impl Shaker {
-    pub fn new_2d() -> Self {
+    pub const fn new_2d() -> Self {
         Self(Dimensions::Two)
     }
 
-    pub fn new_3d() -> Self {
+    pub const fn new_3d() -> Self {
         Self(Dimensions::Three)
     }
 }
@@ -108,6 +108,6 @@ impl From<super::Event> for Shake {
 
 impl From<&super::Event> for Shake {
     fn from(e: &super::Event) -> Self {
-        return Self::from(*e);
+        Self::from(*e)
     }
 }

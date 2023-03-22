@@ -1,12 +1,11 @@
-use std::ops::{Mul};
+use std::ops::Mul;
 
 use bevy::{
     core_pipeline::bloom::BloomSettings,
     prelude::{
         debug, info, AssetServer, Assets, Audio, AudioSink, AudioSinkPlayback, Camera,
-        Camera2dBundle, Commands, Entity, EventReader, EventWriter, Handle, Input,
-        KeyCode, ParamSet, Query, Res, ResMut, Resource,
-        Transform, Vec2, With, Without,
+        Camera2dBundle, Commands, Entity, EventReader, EventWriter, Handle, Input, KeyCode,
+        ParamSet, Query, Res, ResMut, Resource, Transform, Vec2, With, Without,
     },
     sprite::collide_aabb::{collide, Collision},
     text::Text,
@@ -78,8 +77,7 @@ pub fn paddle_input(
     for (entity, _, controls) in paddle_q.iter_mut() {
         let vecs: Vec<Vec2> = keys
             .get_pressed()
-            .map(|k| controls.calculate_vec2(k))
-            .flat_map(|v| v)
+            .filter_map(|k| controls.calculate_vec2(k))
             .collect();
         if !vecs.is_empty() {
             player_vecs.insert(entity, vecs);
@@ -89,14 +87,13 @@ pub fn paddle_input(
     // Blend the inputs into a single Vec2 for each paddle, to allow for
     // diagonal movement
     for (entity, mut vel, _) in paddle_q.iter_mut() {
-        player_vecs
-            .get(&entity)
-            .map(|vecs| {
-                vecs.iter()
-                    .fold(Vec2::ZERO, |acc, v| acc + *v)
-                    .mul(PADDLE_SPEED_MULTIPLIER)
-            })
-            .map(|v| *vel = v.into());
+        if let Some(vecs) = player_vecs.get(&entity) {
+            *vel = vecs
+                .iter()
+                .fold(Vec2::ZERO, |acc, v| acc + *v)
+                .mul(PADDLE_SPEED_MULTIPLIER)
+                .into();
+        }
     }
 }
 
@@ -114,12 +111,13 @@ fn check_collision(
     let mut reflect_x = false;
     let mut reflect_y = false;
 
-    if let Some(collision) = collide(
+    collide(
         collider_tf.translation,
         collider_tf.scale.truncate(),
         mover_new_pos.translation,
         mover_new_pos.scale.truncate(),
-    ) {
+    )
+    .map(|collision| {
         match collision {
             Collision::Left => reflect_x = mover_vel.x > 0.0,
             Collision::Right => reflect_x = mover_vel.x < 0.0,
@@ -136,10 +134,8 @@ fn check_collision(
             mover_vel.y = -mover_vel.y;
         }
 
-        Some(mover_vel)
-    } else {
-        None
-    }
+        mover_vel
+    })
 }
 
 /// Changes the position of the ball according to its velocity
@@ -162,29 +158,29 @@ pub fn move_paddles(
         info!("moving {:?} by {:?}", tf.translation, scaled_vel);
 
         let new_pos = {
-            let mut tf = tf.clone();
-            tf.translation = tf.translation + scaled_vel.extend(0.0);
+            let mut tf = *tf;
+            tf.translation += scaled_vel.extend(0.0);
             tf
         };
 
-        bounds
-            .iter()
-            .find(|(_, bb)| bb.side == player.side)
-            .map(|(bounds_tf, _)| {
-                if is_completely_inside_bounds(bounds_tf, &new_pos) {
-                    tf.translation.x += scaled_vel.x;
-                    tf.translation.y += scaled_vel.y;
-                }
-            });
+        if let Some((bounds_tf, _)) = bounds.iter().find(|(_, bb)| bb.side == player.side) {
+            if is_completely_inside_bounds(bounds_tf, &new_pos) {
+                tf.translation.x += scaled_vel.x;
+                tf.translation.y += scaled_vel.y;
+            }
+        }
     });
 }
+
+type PositionAndMaybeVelocity<'a> = (Entity, &'a Transform, Option<&'a Velocity>);
+type IsColliderButIsNotBall = (With<Collider>, Without<Ball>);
 
 // TODO: remove if not used
 // /// Checks if the ball collides with a Collider. If it does, it sends a collision
 // /// event and reflects the ball according to the collision angle.
 pub fn collide_ball(
     mut ball_query: Query<(&Transform, &mut Velocity), With<Ball>>,
-    collider_query: Query<(Entity, &Transform, Option<&Velocity>), (With<Collider>, Without<Ball>)>,
+    collider_query: Query<PositionAndMaybeVelocity, IsColliderButIsNotBall>,
     mut ev_writer: EventWriter<collider::Event>,
     mut screen_shake_writer: EventWriter<shake::Event>,
 ) {
@@ -214,11 +210,10 @@ pub fn collide_ball(
                 Collision::Inside => { /* */ }
             }
 
-            let collision_event = if let Some(vel) = maybe_vel {
+            let collision_event = maybe_vel.map_or_else(collider::Event::default, |vel| {
                 collider::Event::new(collision, **vel, **ball_vel)
-            } else {
-                collider::Event::default()
-            };
+            });
+
             ev_writer.send(collision_event.clone());
 
             if reflect_x {
@@ -252,6 +247,7 @@ pub fn detect_score(
 
 /// Handles score events by resetting the ball and the players' positions. The
 /// player that scored has their score incremented.
+#[allow(clippy::type_complexity)]
 pub fn handle_score_event(
     mut ev_score: EventReader<score::Event>,
     mut set: ParamSet<(
@@ -367,8 +363,10 @@ mod test {
         Test {
             setup: |app| {
                 app.add_system(move_ball);
-                let mut paddle_bundle = paddle::Bundle::default();
-                paddle_bundle.velocity = Vec2::new(5.0, 0.0).into();
+                let paddle_bundle = paddle::Bundle {
+                    velocity: Vec2::new(5.0, 0.0).into(),
+                    ..Default::default()
+                };
                 app.world.spawn(paddle_bundle).id()
             },
             setup_graphics: default_setup_graphics,
@@ -396,8 +394,10 @@ mod test {
                 app.add_system(move_ball);
                 app.world
                     .spawn(wall::Bundle::default().at(Vec2::new(10.0, 0.0)));
-                let mut paddle_bundle = paddle::Bundle::default();
-                paddle_bundle.velocity = Vec2::new(5.0, 0.0).into();
+                let paddle_bundle = paddle::Bundle {
+                    velocity: Vec2::new(5.0, 0.0).into(),
+                    ..Default::default()
+                };
                 app.world.spawn(paddle_bundle).id()
             },
             setup_graphics: default_setup_graphics,

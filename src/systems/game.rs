@@ -6,13 +6,12 @@ use bevy::{
     text::TextStyle,
 };
 
-
 use crate::{
     component::{
         ball, bounding_box,
         collider::Collider,
         game::Game,
-        paddle::{Side},
+        paddle::Side,
         score::{self, Score},
         wall, Bundle,
     },
@@ -31,7 +30,7 @@ pub fn initialize_match(mut commands: Commands, asset_server: Res<AssetServer>) 
     // Score text style
     let font = asset_server.load("fonts/NotoSansMono-Regular.ttf");
     let score_style = TextStyle {
-        font: font.clone(),
+        font,
         font_size: 50.0,
         color: Color::WHITE,
     };
