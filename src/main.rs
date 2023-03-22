@@ -3,7 +3,6 @@ use bevy::{
     prelude::{App, PluginGroup},
 };
 
-
 fn main() {
     App::new()
         .add_plugins(
