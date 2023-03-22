@@ -6,7 +6,7 @@ use bevy::{
     sprite::{collide_aabb::collide, Sprite, SpriteBundle},
 };
 
-use super::{paddle::Side};
+use super::paddle::Side;
 
 /// A component that is used to mark an entity as being able to detect scores.
 #[derive(BevyComponent, Clone, Default)]
