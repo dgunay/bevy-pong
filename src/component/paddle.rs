@@ -119,6 +119,13 @@ impl Bundle {
         self.friction = friction;
         self
     }
+
+    #[must_use]
+    pub const fn with_dimensions(mut self, width: f32, height: f32) -> Self {
+        self.sprite.transform.scale.x = width;
+        self.sprite.transform.scale.y = height;
+        self
+    }
 }
 
 impl Default for Bundle {

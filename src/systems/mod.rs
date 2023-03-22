@@ -163,11 +163,17 @@ pub fn move_paddles(
             tf
         };
 
+        // If it is associated with a bounding box, check if it is inside the bounds
+        // TODO: it'd be cooler if the BoundingBox could be in the same bundle
+        // as the player, maybe?
         if let Some((bounds_tf, _)) = bounds.iter().find(|(_, bb)| bb.side == player.side) {
             if is_completely_inside_bounds(bounds_tf, &new_pos) {
                 tf.translation.x += scaled_vel.x;
                 tf.translation.y += scaled_vel.y;
             }
+        } else {
+            tf.translation.x += scaled_vel.x;
+            tf.translation.y += scaled_vel.y;
         }
     });
 }
@@ -320,7 +326,11 @@ pub fn stop_background_music(
 #[cfg(test)]
 mod test {
     use crate::{
-        component::{ball, paddle, wall, Bundle},
+        component::{
+            ball,
+            paddle::{self, Side},
+            Bundle,
+        },
         tests::helpers::{default_setup_graphics, Test},
     };
 
@@ -362,7 +372,7 @@ mod test {
 
         Test {
             setup: |app| {
-                app.add_system(move_ball);
+                app.add_system(move_paddles);
                 let paddle_bundle = paddle::Bundle {
                     velocity: Vec2::new(5.0, 0.0).into(),
                     ..Default::default()
@@ -386,22 +396,29 @@ mod test {
     }
 
     #[test]
-    fn paddles_dont_clip_through_walls() {
+    fn paddles_cant_escape_bounding_box() {
         use super::*;
 
         Test {
             setup: |app| {
-                app.add_system(move_ball);
+                app.add_system(move_paddles);
+                app.world.spawn(
+                    bounding_box::Bundle::default()
+                        .with_dimensions(100.0, 100.0)
+                        .on_side(Side::Left),
+                );
                 app.world
-                    .spawn(wall::Bundle::default().at(Vec2::new(10.0, 0.0)));
-                let paddle_bundle = paddle::Bundle {
-                    velocity: Vec2::new(5.0, 0.0).into(),
-                    ..Default::default()
-                };
-                app.world.spawn(paddle_bundle).id()
+                    .spawn(
+                        paddle::Bundle {
+                            velocity: Vec2::new(50.0, 0.0).into(),
+                            ..Default::default()
+                        }
+                        .with_dimensions(1.0, 1.0),
+                    )
+                    .id()
             },
             setup_graphics: default_setup_graphics,
-            frames: 5,
+            frames: 600,
             check: |app, paddle_id| {
                 let paddle_tf = app.world.get::<Transform>(paddle_id).unwrap();
 
@@ -409,8 +426,9 @@ mod test {
                 assert_eq!(paddle_tf.translation.y, 0.0);
                 assert_eq!(paddle_tf.translation.z, 0.0);
 
-                // x should be 10.0, because the paddle should have hit the wall and stopped
-                assert_eq!(paddle_tf.translation.x, 10.0);
+                // x should be no greater than 50.0, because the paddle should
+                // have hit the bounding box
+                assert!(paddle_tf.translation.x < 50.0);
             },
         }
         .run();
