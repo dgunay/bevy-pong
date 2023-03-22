@@ -12,6 +12,9 @@ You can [try it out here](https://dgunay.github.io/bevy-pong/). You may have
 to scroll down to see the game - seems like it positions the viewport on the 
 bottom left of the page for some reason.
 
+Alternatively you can clone the repository and run it with `cargo run`. It is 
+not a particularly demanding game so it will probably perform fine in debug mode.
+
 Stuff I want to maybe try later:
 * Gamepad support
 * Online p2p multiplayer with rollback
