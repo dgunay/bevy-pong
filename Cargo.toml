@@ -1,9 +1,32 @@
 [package]
-name = "bevy-pong"
+name = "bevy_pong" # ToDo
 version = "0.1.0"
+publish = false
+authors = ["Devin Gunay <devingunay@gmail.com>"]
 edition = "2021"
+exclude = ["dist", "build", "assets", "credits"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+# Enable high optimizations for dependencies (incl. Bevy), but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
+
+# Enable a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+
+[profile.release]
+lto = true
+codegen-units = 1
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+[features]
+dev = [
+    "bevy/bevy_dylib",
+]
 
 [dependencies]
 bevy = "0.10.0"
@@ -12,15 +35,9 @@ bevy_embedded_assets = "0.7.0"
 bevy_prototype_lyon = "0.8.0"
 rand = "0.8.5"
 
-# Enable a small amount of optimization in debug mode
-[profile.dev]
-opt-level = 1
+# keep the following in sync with Bevy's dependencies
+winit = { version = "0.28", default-features = false }
+image = { version = "0.24", default-features = false }
 
-# Enable high optimizations for dependencies (incl. Bevy), but not for our code:
-[profile.dev.package."*"]
-opt-level = 3
-
-[workspace.metadata.dylint]
-libraries = [
-    { git = "https://github.com/MinerSebas/bevy_lint", branch = "main" },
-]
+[build-dependencies]
+embed-resource = "1.4"
