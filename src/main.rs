@@ -1,8 +1,7 @@
 use bevy::{
-    diagnostic::LogDiagnosticsPlugin,
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::{App, PluginGroup},
 };
-
 
 fn main() {
     App::new()
@@ -14,7 +13,7 @@ fn main() {
                 ),
         )
         .add_plugin(LogDiagnosticsPlugin::default())
-        // .add_plugin(FrameTimeDiagnosticsPlugin::default())
+        .add_plugin(FrameTimeDiagnosticsPlugin::default())
         // .add_plugin(WorldInspectorPlugin::default())
         .add_plugin(bevy_pong::PongPlugin)
         .run();

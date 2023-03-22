@@ -1,5 +1,12 @@
 use bevy::prelude::{Vec2, Vec3};
 
+// TODO: these are not exact, I just kind of dialed them in until they looked right
+pub const LOGICAL_VIEWPORT_WIDTH: f32 = 800.0;
+pub const LOGICAL_VIEWPORT_HEIGHT: f32 = 600.0;
+
+pub const FPS_COUNTER_POS: Vec2 =
+    Vec2::new(LOGICAL_VIEWPORT_WIDTH / 2.0, LOGICAL_VIEWPORT_HEIGHT / 2.0);
+
 /// The X and Y coordinates of the left paddle's starting position.
 pub const LEFT_PADDLE_STARTING_POSITION: Vec2 = Vec2::new(-100.0, 0.0);
 /// The X and Y coordinates of the right paddle's starting position.

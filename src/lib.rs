@@ -54,6 +54,11 @@ impl Plugin for PongPlugin {
         app
             // boilerplate and other plugins
             .add_startup_system(systems::spawn_camera)
+            .add_plugin(
+                plugins::fps::Plugin::default()
+                    .load_font_from("fonts/NotoSansMono-Regular.ttf")
+                    .display_at(constants::FPS_COUNTER_POS),
+            )
             .insert_resource(Msaa::Sample4)
             .add_plugin(ShapePlugin)
             .add_plugin(plugins::shake::Plugin)
