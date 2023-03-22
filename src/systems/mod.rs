@@ -1,19 +1,17 @@
-use std::ops::{DerefMut, Mul};
+use std::ops::{Mul};
 
 use bevy::{
     core_pipeline::bloom::BloomSettings,
     prelude::{
-        debug, info, AssetServer, Assets, Audio, AudioSink, AudioSinkPlayback, Camera, Camera2d,
-        Camera2dBundle, Commands, DetectChanges, Entity, EventReader, EventWriter, Handle, Input,
-        KeyCode, OrthographicProjection, ParamSet, Projection, Query, Res, ResMut, Resource,
+        debug, info, AssetServer, Assets, Audio, AudioSink, AudioSinkPlayback, Camera,
+        Camera2dBundle, Commands, Entity, EventReader, EventWriter, Handle, Input,
+        KeyCode, ParamSet, Query, Res, ResMut, Resource,
         Transform, Vec2, With, Without,
     },
-    render::primitives::Frustum,
     sprite::collide_aabb::{collide, Collision},
     text::Text,
     time::{Time, Timer},
     utils::HashMap,
-    window::{Window, WindowResized},
 };
 
 use crate::{
@@ -24,7 +22,7 @@ use crate::{
         controls::Keyboard,
         paddle::Player,
         score::Score,
-        velocity::{self, Friction, Velocity},
+        velocity::{Friction, Velocity},
     },
     constants::{BALL_DEFAULT_STARTING_POSITION, PADDLE_SPEED_MULTIPLIER, TIME_STEP},
     events::score,
@@ -147,7 +145,7 @@ fn check_collision(
 /// Changes the position of the ball according to its velocity
 pub fn move_ball(mut ball_q: Query<(&mut Transform, &Velocity), With<Ball>>) {
     ball_q.iter_mut().for_each(|(mut tf, vel)| {
-        let mut scaled_vel = vel.mul(TIME_STEP);
+        let scaled_vel = vel.mul(TIME_STEP);
         info!("moving {:?} by {:?}", tf.translation, scaled_vel);
 
         tf.translation.x += scaled_vel.x;

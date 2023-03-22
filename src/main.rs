@@ -2,7 +2,7 @@ use bevy::{
     diagnostic::LogDiagnosticsPlugin,
     prelude::{App, PluginGroup},
 };
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+
 
 fn main() {
     App::new()

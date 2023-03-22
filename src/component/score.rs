@@ -1,4 +1,4 @@
-use bevy::prelude::{Bundle as BevyBundle, Component, Deref, DerefMut, Vec2};
+use bevy::prelude::{Bundle as BevyBundle, Component, Vec2};
 use bevy::text::{Text, Text2dBundle, TextAlignment, TextStyle};
 
 use super::paddle::Side;

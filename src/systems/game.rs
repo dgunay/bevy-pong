@@ -5,16 +5,15 @@ use bevy::{
     },
     text::TextStyle,
 };
-use bevy_inspector_egui::egui::style;
+
 
 use crate::{
     component::{
         ball, bounding_box,
         collider::Collider,
         game::Game,
-        paddle::{Player, Side},
+        paddle::{Side},
         score::{self, Score},
-        velocity::Friction,
         wall, Bundle,
     },
     constants::{

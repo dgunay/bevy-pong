@@ -7,7 +7,6 @@ use bevy::{
 use crate::constants::{PADDLE_DEFAULT_FRICTION, PADDLE_SCALE};
 
 use super::{
-    bounding_box,
     collider::Collider,
     controls::{self, Keyboard},
     velocity::{Friction, Velocity},

@@ -1,10 +1,10 @@
-use std::ops::{Add, Mul};
 
-use bevy::prelude::{Component, KeyCode, Transform, Vec2, Vec3};
 
-use crate::constants::PADDLE_SPEED_MULTIPLIER;
+use bevy::prelude::{Component, KeyCode, Vec2, Vec3};
 
-use super::velocity::Velocity;
+
+
+
 
 // TODO: make the kind of controller (keyboard, gamepad, etc) generic
 /// Controls the movement of a paddle with the keyboard. Keybindings are

@@ -7,8 +7,8 @@
 use self::resources::AspectRatio;
 use bevy::{
     prelude::{
-        debug, App, Camera2d, Deref, DerefMut, DetectChanges, IntoSystemConfig,
-        OrthographicProjection, Plugin as BevyPlugin, Query, Res, Resource, With,
+        debug, App, Camera2d, DetectChanges,
+        OrthographicProjection, Plugin as BevyPlugin, Query, Res, With,
     },
     window::Window,
 };
