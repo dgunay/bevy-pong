@@ -46,3 +46,5 @@ pub const BALL_DEFAULT_STARTING_POSITION: Vec2 = Vec2::new(0.0, 0.0);
 pub const BALL_SCALE: Vec3 = Vec3::new(15.0, 15.0, 15.0);
 
 pub const TIME_STEP: f32 = 1.0 / 60.0;
+
+pub const STICK_DEAD_ZONE: f32 = 0.3;
