@@ -75,7 +75,7 @@ pub struct Bundle {
     pub sprite: SpriteBundle,
     /// Defines the input controls for the paddle. Used to segregate controls
     /// per player.
-    pub controls: Keyboard,
+    pub keyboard: Keyboard,
     /// Identifies the paddle as something that can be collided with.
     pub collider: Collider,
     /// Defines the velocity of the paddle.
@@ -90,7 +90,7 @@ impl Bundle {
     /// Creates a new paddle bundle with the given controls and side.
     pub fn new(controls: Keyboard, side: Side) -> Self {
         Self {
-            controls,
+            keyboard: controls,
             player: Player::new(side, Vec2::new(0.0, 0.0)),
             ..Default::default()
         }
@@ -145,7 +145,7 @@ impl Default for Bundle {
                 },
                 ..Default::default()
             },
-            controls: Keyboard::default(),
+            keyboard: Keyboard::default(),
             collider: Collider::default(),
             player: Player::default(),
             velocity: Velocity::default(),

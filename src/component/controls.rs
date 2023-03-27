@@ -60,3 +60,30 @@ impl Default for Keyboard {
         arrow_keys()
     }
 }
+
+#[derive(Debug, Clone, Copy, Component)]
+pub struct Gamepad {
+    id: u32,
+}
+
+// impl Gamepad {
+//     pub fn new(id: u32) -> Self {
+//         Self { id }
+//     }
+
+//     pub fn calculate_vec2(&self, k: &KeyCode) -> Option<Vec2> {
+//         self.calculate_vec3(k).map(|v| v.truncate())
+//     }
+
+//     pub fn calculate_vec3(&self, k: &KeyCode) -> Option<Vec3> {
+//         match k {
+//             k if *k == KeyCode::Gamepad(self.id, 1) => Some(Vec3::Y),
+//             k if *k == KeyCode::Gamepad(self.id, 0) => Some(Vec3::NEG_Y),
+//             k if *k == KeyCode::Gamepad(self.id, 2) => Some(Vec3::NEG_X),
+//             k if *k == KeyCode::Gamepad(self.id, 3) => Some(Vec3::X),
+//             // else do nothing
+//             _ => None,
+//         }
+//         .map(|v| v.normalize())
+//     }
+// }

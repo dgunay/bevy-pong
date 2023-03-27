@@ -3,9 +3,10 @@ use std::ops::Mul;
 use bevy::{
     core_pipeline::bloom::BloomSettings,
     prelude::{
-        debug, info, AssetServer, Assets, Audio, AudioSink, AudioSinkPlayback, Camera,
-        Camera2dBundle, Commands, Entity, EventReader, EventWriter, Handle, Input, KeyCode,
-        ParamSet, Query, Res, ResMut, Resource, Transform, Vec2, With, Without,
+        debug, info, AssetServer, Assets, Audio, AudioSink, AudioSinkPlayback, Axis, Camera,
+        Camera2dBundle, Commands, Entity, EventReader, EventWriter, Gamepad as BevyGamepad,
+        GamepadAxis, GamepadAxisType, Gamepads, Handle, Input, KeyCode, ParamSet, Query, Res,
+        ResMut, Resource, Transform, Vec2, With, Without,
     },
     sprite::collide_aabb::{collide, Collision},
     text::Text,
@@ -18,12 +19,12 @@ use crate::{
         ball::Ball,
         bounding_box::{self, is_completely_inside_bounds, is_inside_bounds, BoundingBox},
         collider::{self, Collider},
-        controls::Keyboard,
+        controls::{Gamepad, Keyboard},
         paddle::Player,
         score::Score,
         velocity::{Friction, Velocity},
     },
-    constants::{BALL_DEFAULT_STARTING_POSITION, PADDLE_SPEED_MULTIPLIER, TIME_STEP},
+    constants::{self, BALL_DEFAULT_STARTING_POSITION, PADDLE_SPEED_MULTIPLIER, TIME_STEP},
     events::score,
     plugins::shake,
 };
@@ -69,12 +70,14 @@ pub fn log_game_state(
 
 /// Change the velocity of the paddle based on the player input
 pub fn paddle_input(
+    gamepads: Option<Res<Gamepads>>,
+    gp_axes: Res<Axis<GamepadAxis>>,
     keys: Res<Input<KeyCode>>,
-    mut paddle_q: Query<(Entity, &mut Velocity, &Keyboard), With<Player>>,
+    mut paddle_q: Query<(Entity, &mut Velocity, &Keyboard, Option<&Gamepad>), With<Player>>,
 ) {
     let mut player_vecs: HashMap<Entity, Vec<Vec2>> = HashMap::new();
     // Map Entity ID to the set of Vec2s produced by the key inputs
-    for (entity, _, controls) in paddle_q.iter_mut() {
+    for (entity, _, controls, _) in paddle_q.iter_mut() {
         let vecs: Vec<Vec2> = keys
             .get_pressed()
             .filter_map(|k| controls.calculate_vec2(k))
@@ -86,13 +89,40 @@ pub fn paddle_input(
 
     // Blend the inputs into a single Vec2 for each paddle, to allow for
     // diagonal movement
-    for (entity, mut vel, _) in paddle_q.iter_mut() {
+    for (entity, mut vel, _, _) in paddle_q.iter_mut() {
         if let Some(vecs) = player_vecs.get(&entity) {
             *vel = vecs
                 .iter()
                 .fold(Vec2::ZERO, |acc, v| acc + *v)
                 .mul(PADDLE_SPEED_MULTIPLIER)
                 .into();
+        }
+    }
+
+    if let Some(gamepads) = gamepads {
+        for (entity, mut vel, _, gamepad) in paddle_q.iter_mut() {
+            // TODO: make the gamepad ID have to match the player
+            gamepads.iter().for_each(|gp| {
+                // The joysticks are represented using a separate axis for X and Y
+                let axis_lx = GamepadAxis {
+                    gamepad: gp,
+                    axis_type: GamepadAxisType::LeftStickX,
+                };
+                let axis_ly = GamepadAxis {
+                    gamepad: gp,
+                    axis_type: GamepadAxisType::LeftStickY,
+                };
+
+                if let (Some(x), Some(y)) = (gp_axes.get(axis_lx), gp_axes.get(axis_ly)) {
+                    // combine X and Y into one vector
+                    let left_stick_pos = Vec2::new(x, y);
+
+                    let new_vel = left_stick_pos.mul(PADDLE_SPEED_MULTIPLIER);
+                    if new_vel.length() > constants::STICK_DEAD_ZONE {
+                        *vel = new_vel.into();
+                    }
+                }
+            });
         }
     }
 }
