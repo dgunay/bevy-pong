@@ -1,10 +1,10 @@
 use bevy::{
-    diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin},
+    diagnostic::{Diagnostics, DiagnosticsStore, FrameTimeDiagnosticsPlugin},
     prelude::{
         App, Bundle as BevyBundle, Color, Component, Plugin as BevyPlugin, Query, Res, Resource,
         Text, Vec2, With,
     },
-    text::{Text2dBundle, TextAlignment, TextStyle},
+    text::{JustifyText, Text2dBundle, TextStyle},
 };
 
 /// Displays an FPS counter on the screen. Requires the
@@ -43,7 +43,6 @@ pub struct Fps;
 #[derive(BevyBundle, Default)]
 struct Bundle {
     fps: Fps,
-    #[bundle]
     pub text: Text2dBundle,
 }
 
@@ -71,7 +70,7 @@ impl Bundle {
                 }),
             style,
         )
-        .with_alignment(TextAlignment::Center);
+        .with_alignment(JustifyText::Center);
         self
     }
 }
@@ -96,8 +95,8 @@ fn spawn_fps_text(
     );
 }
 
-fn update_fps_text(mut query: Query<&mut Text, With<Fps>>, diagnostics: Res<Diagnostics>) {
-    if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
+fn update_fps_text(mut query: Query<&mut Text, With<Fps>>, diagnostics: Res<DiagnosticsStore>) {
+    if let Some(fps) = diagnostics.get(&FrameTimeDiagnosticsPlugin::FPS) {
         if let Some(average_fps) = fps.average() {
             for mut text in query.iter_mut() {
                 text.sections[0].value = format!("{:.2}", average_fps);

@@ -3,7 +3,7 @@ use bevy::prelude::Component as BevyComponent;
 use crate::component::paddle::Side;
 
 /// An event that is sent when a player scores.
-#[derive(BevyComponent, Debug)]
+#[derive(BevyComponent, Debug, bevy::ecs::event::Event)]
 pub struct Event {
     /// The side of the player who scored.
     pub player_side: Side,

@@ -1,13 +1,14 @@
 use std::ops::Mul;
 
 use bevy::{
+    audio::{AudioBundle, PlaybackSettings},
     core_pipeline::bloom::BloomSettings,
+    ecs::component::Component,
     prelude::{
-        debug, info, AssetServer, Assets, Audio, AudioSink, AudioSinkPlayback, Camera,
-        Camera2dBundle, Commands, Entity, EventReader, EventWriter, Handle, Input, KeyCode,
-        ParamSet, Query, Res, ResMut, Resource, Transform, Vec2, With, Without,
+        debug, info, AssetServer, Assets, AudioSink, AudioSinkPlayback, ButtonInput, Camera,
+        Camera2dBundle, Commands, Entity, EventReader, EventWriter, Handle, KeyCode, ParamSet,
+        Query, Res, ResMut, Resource, Transform, Vec2, With, Without,
     },
-    sprite::collide_aabb::{collide, Collision},
     text::Text,
     time::{Time, Timer},
     utils::HashMap,
@@ -17,6 +18,7 @@ use crate::{
     component::{
         ball::Ball,
         bounding_box::{self, is_completely_inside_bounds, is_inside_bounds, BoundingBox},
+        collide_aabb::{collide, Collision},
         collider::{self, Collider},
         controls::Keyboard,
         paddle::Player,
@@ -69,7 +71,7 @@ pub fn log_game_state(
 
 /// Change the velocity of the paddle based on the player input
 pub fn paddle_input(
-    keys: Res<Input<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
     mut paddle_q: Query<(Entity, &mut Velocity, &Keyboard), With<Player>>,
 ) {
     let mut player_vecs: HashMap<Entity, Vec<Vec2>> = HashMap::new();
@@ -111,13 +113,7 @@ fn check_collision(
     let mut reflect_x = false;
     let mut reflect_y = false;
 
-    collide(
-        collider_tf.translation,
-        collider_tf.scale.truncate(),
-        mover_new_pos.translation,
-        mover_new_pos.scale.truncate(),
-    )
-    .map(|collision| {
+    collide(collider_tf, mover_new_pos).map(|collision| {
         match collision {
             Collision::Left => reflect_x = mover_vel.x > 0.0,
             Collision::Right => reflect_x = mover_vel.x < 0.0,
@@ -194,12 +190,7 @@ pub fn collide_ball(
     let ball_size = ball_tf.scale.truncate();
 
     for (_, collider_tf, maybe_vel) in &collider_query {
-        if let Some(collision) = collide(
-            ball_tf.translation,
-            ball_size,
-            collider_tf.translation,
-            collider_tf.scale.truncate(),
-        ) {
+        if let Some(collision) = collide(ball_tf, collider_tf) {
             debug!(
                 "Collision between {:?} and {:?}: {:?}",
                 ball_tf, collider_tf, collision
@@ -288,39 +279,42 @@ pub fn handle_score_event(
 
 /// Plays a sound when a collision occurs.
 pub fn collision_sound(
+    mut commands: Commands,
     mut ev_collision: EventReader<collider::Event>,
     asset_server: Res<AssetServer>,
-    audio: Res<Audio>,
 ) {
     for e in ev_collision.iter() {
         if e.kind != Collision::Inside {
-            let sound = asset_server.load("sound/collision.ogg");
-            audio.play(sound);
+            commands.spawn(AudioBundle {
+                source: asset_server.load("sound/collision.ogg"),
+                settings: PlaybackSettings::ONCE,
+            });
         }
     }
 }
 
-#[derive(Resource)]
-pub struct MusicController(Handle<AudioSink>);
+#[derive(Component)]
+struct BackgroundMusic;
 
 pub fn start_background_music(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    audio: Res<Audio>,
-    audio_sinks: Res<Assets<AudioSink>>,
+    audio: Query<&AudioSink, With<BackgroundMusic>>,
 ) {
-    let music = asset_server.load("sound/bgm.ogg");
-    let handle = audio_sinks.get_handle(audio.play(music));
-    commands.insert_resource(MusicController(handle));
+    commands.spawn((
+        AudioBundle {
+            source: asset_server.load("sound/bgm.ogg"),
+            settings: PlaybackSettings {
+                volume: 0.5,
+                ..Default::default()
+            },
+        },
+        BackgroundMusic,
+    ));
 }
 
-pub fn stop_background_music(
-    audio_sinks: Res<Assets<AudioSink>>,
-    music_controller: Res<MusicController>,
-) {
-    if let Some(sink) = audio_sinks.get(&music_controller.0) {
-        sink.stop();
-    }
+pub fn stop_background_music(music: Query<&AudioSink, With<BackgroundMusic>>) {
+    music.get_single().map(|m| m.pause());
 }
 
 #[cfg(test)]

@@ -17,11 +17,10 @@
 //! - Sound effects
 //! - Dynamic screen shake based on relative speed of colliding objects
 use bevy::{
-    prelude::{
-        App, ClearColor, Color, FixedTime, IntoSystemAppConfig, IntoSystemConfig,
-        IntoSystemConfigs, KeyCode, Msaa, OnEnter, OnExit, OnUpdate, Plugin,
-    },
-    time::{Timer, TimerMode},
+    app::Startup,
+    ecs::schedule::common_conditions::in_state,
+    prelude::{App, ClearColor, Color, KeyCode, Msaa, OnEnter, OnExit, Plugin},
+    time::{Fixed, Time, Timer, TimerMode},
 };
 use bevy_prototype_lyon::prelude::ShapePlugin;
 use component::collider;
@@ -53,25 +52,25 @@ impl Plugin for PongPlugin {
     fn build(&self, app: &mut App) {
         app
             // boilerplate and other plugins
-            .add_startup_system(systems::spawn_camera)
-            .add_plugin(
+            .add_systems(Startup, (systems::spawn_camera))
+            .add_plugins(
                 plugins::fps::Plugin::default()
                     .load_font_from("fonts/NotoSansMono-Regular.ttf")
                     .display_at(constants::FPS_COUNTER_POS),
             )
             .insert_resource(Msaa::Sample4)
-            .add_plugin(ShapePlugin)
-            .add_plugin(plugins::shake::Plugin)
+            .add_plugins(ShapePlugin)
+            .add_plugins(plugins::shake::Plugin)
             .insert_resource(ClearColor(Color::BLACK))
             .insert_resource(LogSamplingTimer(Timer::from_seconds(
                 1.0,
                 TimerMode::Repeating,
             )))
-            .add_plugin(
+            .add_plugins(
                 plugins::window_scaling_2d::Plugin::default()
                     .with_locked_aspect_ratio(ASPECT_RATIO_4_3),
             )
-            .insert_resource(FixedTime::new_from_secs(TIME_STEP))
+            .insert_resource(Time::<Fixed>::new_from_secs(TIME_STEP))
             // Game resources and state
             .add_state::<AppState>()
             .add_event::<score::Event>()
@@ -79,7 +78,7 @@ impl Plugin for PongPlugin {
             .add_event::<collider::Event>()
             // Menu scheduling
             .add_system(systems::setup_main_menu.in_schedule(OnEnter(AppState::MainMenu)))
-            .add_system(systems::read_keypresses.in_set(OnUpdate(AppState::MainMenu)))
+            .add_system(systems::read_keypresses.in_set(in_state(AppState::MainMenu)))
             .add_system(systems::teardown_main_menu.in_schedule(OnExit(AppState::MainMenu)))
             // End menu scheduling
             // Game scheduling
@@ -97,9 +96,10 @@ impl Plugin for PongPlugin {
                     systems::handle_score_event.before(systems::detect_win_condition),
                     systems::detect_win_condition,
                 )
-                    .in_set(OnUpdate(AppState::InGame)),
+                    .in_set(in_state(AppState::InGame)),
             )
-            .add_system(systems::clear_active_match.in_schedule(OnExit(AppState::InGame)))
+            // TODO:
+            .add_system(OnExit, systems::clear_active_match.(AppState::InGame))
             .add_system(systems::stop_background_music.in_schedule(OnExit(AppState::InGame)))
             // End game scheduling
             .register_type::<component::paddle::Player>()
