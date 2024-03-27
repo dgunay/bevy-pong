@@ -1,10 +1,10 @@
 use bevy::{
+    input::ButtonInput,
     prelude::{
         debug, info, AssetServer, BuildChildren, Color, Commands, DespawnRecursiveExt, Entity,
-        Input, KeyCode, NextState, Query, Res, ResMut, SpatialBundle, Text2dBundle, Transform,
-        With,
+        KeyCode, NextState, Query, Res, ResMut, SpatialBundle, Text2dBundle, Transform, With,
     },
-    text::{Text, TextAlignment, TextStyle},
+    text::{JustifyText, Text, TextStyle},
 };
 
 use crate::{component::main_menu::MainMenu, states::AppState};
@@ -39,21 +39,21 @@ pub fn setup_main_menu(
         .with_children(|parent| {
             parent.spawn(Text2dBundle {
                 text: Text::from_section("P O N G", title_style.clone())
-                    .with_alignment(TextAlignment::Center),
+                    .with_alignment(JustifyText::Center),
                 transform: Transform::from_xyz(0.0, 100.0, 0.0),
                 ..Default::default()
             });
 
             parent.spawn(Text2dBundle {
                 text: Text::from_section("Press Spacebar to play", prompt_style.clone())
-                    .with_alignment(TextAlignment::Center),
+                    .with_alignment(JustifyText::Center),
                 transform: Transform::from_xyz(0.0, -100.0, 0.0),
                 ..Default::default()
             });
         });
 }
 
-pub fn read_keypresses(keys: Res<Input<KeyCode>>, mut state: ResMut<NextState<AppState>>) {
+pub fn read_keypresses(keys: Res<ButtonInput<KeyCode>>, mut state: ResMut<NextState<AppState>>) {
     keys.get_just_pressed().for_each(|key| {
         debug!("Key pressed: {:?}", key);
         if key == &KeyCode::Space {

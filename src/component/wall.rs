@@ -14,7 +14,6 @@ pub struct Wall;
 #[derive(BevyBundle)]
 pub struct Bundle {
     collider: Collider,
-    #[bundle]
     sprite: SpriteBundle,
     wall: Wall,
 }

@@ -1,19 +1,18 @@
 use bevy::prelude::{Bundle as BevyBundle, Component, Vec2};
-use bevy::text::{Text, Text2dBundle, TextAlignment, TextStyle};
+use bevy::text::{JustifyText, Text, Text2dBundle, TextStyle};
 
 use super::paddle::Side;
 
 #[derive(BevyBundle, Clone)]
 pub struct Bundle {
     pub score: Score,
-    #[bundle]
     pub text: Text2dBundle,
 }
 
 impl Bundle {
     pub fn with_style(mut self, style: TextStyle) -> Self {
         self.text.text =
-            Text::from_section(self.score.to_string(), style).with_alignment(TextAlignment::Center);
+            Text::from_section(self.score.to_string(), style).with_justify(JustifyText::Center);
         self
     }
 
@@ -34,7 +33,7 @@ impl Default for Bundle {
             score: Default::default(),
             text: Text2dBundle {
                 text: Text::from_section(Score::default().to_string(), TextStyle::default())
-                    .with_alignment(TextAlignment::Center),
+                    .with_justify(JustifyText::Center),
                 ..Default::default()
             },
         }

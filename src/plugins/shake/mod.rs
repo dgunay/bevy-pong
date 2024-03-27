@@ -27,11 +27,11 @@ pub struct Plugin;
 impl BevyPlugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_event::<Event>()
-            .add_systems((handle_shake_events, process_shakes));
+            .add_systems(handle_shake_events, process_shakes);
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, bevy::ecs::event::Event)]
 /// Send this event to start a screen shake.
 pub struct Event {
     /// How hard the shake should be.
