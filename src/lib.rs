@@ -17,9 +17,10 @@
 //! - Sound effects
 //! - Dynamic screen shake based on relative speed of colliding objects
 use bevy::{
-    app::Startup,
+    app::{Startup, Update},
     ecs::schedule::common_conditions::in_state,
-    prelude::{App, ClearColor, Color, KeyCode, Msaa, OnEnter, OnExit, Plugin},
+    input::keyboard::KeyboardInput,
+    prelude::{App, ClearColor, Color, IntoSystemConfigs, KeyCode, Msaa, OnEnter, OnExit, Plugin},
     time::{Fixed, Time, Timer, TimerMode},
 };
 use bevy_prototype_lyon::prelude::ShapePlugin;
@@ -70,21 +71,26 @@ impl Plugin for PongPlugin {
                 plugins::window_scaling_2d::Plugin::default()
                     .with_locked_aspect_ratio(ASPECT_RATIO_4_3),
             )
-            .insert_resource(Time::<Fixed>::new_from_secs(TIME_STEP))
+            .insert_resource(Time::<Fixed>::from_seconds(TIME_STEP))
             // Game resources and state
-            .add_state::<AppState>()
+            .init_state::<AppState>()
             .add_event::<score::Event>()
-            .add_event::<KeyCode>()
+            .add_event::<KeyboardInput>()
             .add_event::<collider::Event>()
             // Menu scheduling
-            .add_system(systems::setup_main_menu.in_schedule(OnEnter(AppState::MainMenu)))
-            .add_system(systems::read_keypresses.in_set(in_state(AppState::MainMenu)))
-            .add_system(systems::teardown_main_menu.in_schedule(OnExit(AppState::MainMenu)))
+            .add_systems(
+                OnEnter(AppState::MainMenu),
+                (systems::setup_main_menu, systems::read_keypresses),
+            )
+            .add_systems(OnExit(AppState::MainMenu), systems::teardown_main_menu)
             // End menu scheduling
             // Game scheduling
-            .add_system(systems::initialize_match.in_schedule(OnEnter(AppState::InGame)))
-            .add_system(systems::start_background_music.in_schedule(OnEnter(AppState::InGame)))
             .add_systems(
+                OnEnter(AppState::InGame),
+                (systems::initialize_match, systems::start_background_music),
+            )
+            .add_systems(
+                Update,
                 (
                     systems::collision_sound,
                     systems::paddle_input,
@@ -96,11 +102,11 @@ impl Plugin for PongPlugin {
                     systems::handle_score_event.before(systems::detect_win_condition),
                     systems::detect_win_condition,
                 )
-                    .in_set(in_state(AppState::InGame)),
+                    .run_if(in_state(AppState::InGame)),
             )
             // TODO:
-            .add_system(OnExit, systems::clear_active_match.(AppState::InGame))
-            .add_system(systems::stop_background_music.in_schedule(OnExit(AppState::InGame)))
+            .add_systems(OnExit(AppState::InGame), systems::clear_active_match)
+            .add_systems(OnExit(AppState::InGame), systems::stop_background_music)
             // End game scheduling
             .register_type::<component::paddle::Player>()
             .register_type::<component::bounding_box::BoundingBox>();
