@@ -75,7 +75,7 @@ impl Shake {
         }
 
         // The shake should fade out over the course of the timer
-        let fade = 1.0 - self.timer.percent();
+        let fade = 1.0 - self.timer.fraction();
         let x = rand::random::<f32>() * self.intensity * fade;
         let y = rand::random::<f32>() * self.intensity * fade;
         let z = rand::random::<f32>() * self.intensity * fade;

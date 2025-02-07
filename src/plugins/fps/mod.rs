@@ -1,4 +1,5 @@
 use bevy::{
+    app::{Startup, Update},
     diagnostic::{Diagnostics, DiagnosticsStore, FrameTimeDiagnosticsPlugin},
     prelude::{
         App, Bundle as BevyBundle, Color, Component, Plugin as BevyPlugin, Query, Res, Resource,
@@ -31,8 +32,8 @@ impl Plugin {
 impl BevyPlugin for Plugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(self.config.clone())
-            .add_startup_system(spawn_fps_text)
-            .add_system(update_fps_text);
+            .add_systems(Startup, spawn_fps_text)
+            .add_systems(Update, update_fps_text);
     }
 }
 
@@ -70,7 +71,7 @@ impl Bundle {
                 }),
             style,
         )
-        .with_alignment(JustifyText::Center);
+        .with_justify(JustifyText::Center);
         self
     }
 }

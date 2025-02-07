@@ -39,14 +39,14 @@ pub fn setup_main_menu(
         .with_children(|parent| {
             parent.spawn(Text2dBundle {
                 text: Text::from_section("P O N G", title_style.clone())
-                    .with_alignment(JustifyText::Center),
+                    .with_justify(JustifyText::Center),
                 transform: Transform::from_xyz(0.0, 100.0, 0.0),
                 ..Default::default()
             });
 
             parent.spawn(Text2dBundle {
                 text: Text::from_section("Press Spacebar to play", prompt_style.clone())
-                    .with_alignment(JustifyText::Center),
+                    .with_justify(JustifyText::Center),
                 transform: Transform::from_xyz(0.0, -100.0, 0.0),
                 ..Default::default()
             });

@@ -5,6 +5,7 @@
 use std::{ops::Mul, time::Duration};
 
 use bevy::{
+    app::Update,
     ecs::system::Res,
     prelude::{App, Commands, Entity, EventReader, Plugin as BevyPlugin, Query, Transform},
     time::Time,
@@ -27,7 +28,7 @@ pub struct Plugin;
 impl BevyPlugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_event::<Event>()
-            .add_systems(handle_shake_events, process_shakes);
+            .add_systems(Update, (handle_shake_events, process_shakes));
     }
 }
 
@@ -66,7 +67,7 @@ impl From<collider::Event> for Event {
 }
 
 fn handle_shake_events(mut commands: Commands, mut shake_events: EventReader<Event>) {
-    for e in shake_events.iter() {
+    for e in shake_events.read() {
         commands.spawn(component::Shake::from(e));
     }
 }
@@ -100,7 +101,10 @@ fn process_shakes(
 
 #[cfg(test)]
 mod test {
-    use bevy::prelude::{App, Camera2dBundle, Commands, Transform, With, Without};
+    use bevy::{
+        app::Startup,
+        prelude::{App, Camera2dBundle, Commands, Transform, With, Without},
+    };
 
     use crate::plugins::shake::component::Shaker;
 
@@ -111,8 +115,8 @@ mod test {
         let mut app = App::new();
 
         app.add_plugins(bevy::prelude::MinimalPlugins)
-            .add_plugin(super::Plugin)
-            .add_startup_system(|mut commands: Commands| {
+            .add_plugins(super::Plugin)
+            .add_systems(Startup, |mut commands: Commands| {
                 commands.spawn((
                     Camera2dBundle::default(),
                     super::component::Shaker::new_3d(),
