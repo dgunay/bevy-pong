@@ -3,10 +3,13 @@ use bevy::{
         Bundle as BevyBundle, Color, Component as BevyComponent, Transform, Vec2, Visibility,
     },
     reflect::Reflect,
-    sprite::{collide_aabb::collide, Sprite, SpriteBundle},
+    sprite::{Sprite, SpriteBundle},
 };
 
-use super::paddle::Side;
+use super::{
+    collide_aabb::{self, collide},
+    paddle::Side,
+};
 
 /// A component that is used to mark an entity as being able to detect scores.
 #[derive(BevyComponent, Clone, Default)]
@@ -78,13 +81,7 @@ impl Default for Bundle {
 
 /// Returns true if the entity is outside the bounds of the bounding box.
 pub fn is_outside_bounds(bounds: &Transform, entity: &Transform) -> bool {
-    collide(
-        bounds.translation,
-        bounds.scale.truncate(),
-        entity.translation,
-        entity.scale.truncate(),
-    )
-    .is_none()
+    collide(bounds.clone(), entity.clone()).is_none()
 }
 
 /// Returns true if the entity is inside the bounds of the bounding box.
@@ -93,12 +90,7 @@ pub fn is_inside_bounds(bounds: &Transform, entity: &Transform) -> bool {
 }
 
 pub fn is_completely_inside_bounds(bounds: &Transform, entity: &Transform) -> bool {
-    collide(
-        bounds.translation,
-        bounds.scale.truncate(),
-        entity.translation,
-        entity.scale.truncate(),
-    ) == Some(bevy::sprite::collide_aabb::Collision::Inside)
+    collide(bounds.clone(), entity.clone()) == Some(collide_aabb::Collision::Inside)
 }
 
 #[cfg(test)]

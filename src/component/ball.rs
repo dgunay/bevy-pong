@@ -2,7 +2,7 @@ use std::ops::Mul;
 
 use super::velocity::Velocity;
 use crate::constants::{BALL_DEFAULT_STARTING_POSITION, BALL_SCALE, DEFAULT_BALL_SPEED};
-use bevy::prelude::{Bundle as BevyBundle, Color, Component, Transform, Vec2};
+use bevy::prelude::{Bundle as BevyBundle, Color, Component, SpatialBundle, Transform, Vec2};
 use bevy_prototype_lyon::{
     prelude::{Fill, GeometryBuilder, ShapeBundle},
     shapes,
@@ -15,7 +15,6 @@ pub struct Ball;
 /// A bundle of components that can be used to spawn a ball.
 #[derive(BevyBundle)]
 pub struct Bundle {
-    #[bundle]
     /// Controls the shape of the ball.
     circle: ShapeBundle,
     /// Controls the color of the ball.
@@ -36,7 +35,7 @@ impl Bundle {
     #[must_use]
     /// Sets the position of the ball.
     pub fn with_position(mut self, pos: Vec2) -> Self {
-        self.circle.transform.translation = (pos, 0.0).into();
+        self.circle.spatial.transform.translation = (pos, 0.0).into();
         self
     }
 }
@@ -55,9 +54,12 @@ impl Default for Bundle {
         Self {
             circle: ShapeBundle {
                 path: GeometryBuilder::build_as(&shapes::Circle::default()),
-                transform: Transform {
-                    translation: (BALL_DEFAULT_STARTING_POSITION, 0.0).into(),
-                    scale: BALL_SCALE,
+                spatial: SpatialBundle {
+                    transform: Transform {
+                        translation: (BALL_DEFAULT_STARTING_POSITION, 0.0).into(),
+                        scale: BALL_SCALE,
+                        ..Default::default()
+                    },
                     ..Default::default()
                 },
                 ..Default::default()

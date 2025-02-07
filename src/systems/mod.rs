@@ -1,13 +1,14 @@
 use std::ops::Mul;
 
 use bevy::{
+    audio::{AudioBundle, PlaybackSettings, Volume},
     core_pipeline::bloom::BloomSettings,
+    ecs::component::Component,
     prelude::{
-        debug, info, AssetServer, Assets, Audio, AudioSink, AudioSinkPlayback, Camera,
-        Camera2dBundle, Commands, Entity, EventReader, EventWriter, Handle, Input, KeyCode,
-        ParamSet, Query, Res, ResMut, Resource, Transform, Vec2, With, Without,
+        debug, info, AssetServer, AudioSink, AudioSinkPlayback, ButtonInput, Camera,
+        Camera2dBundle, Commands, Entity, EventReader, EventWriter, Handle, KeyCode, ParamSet,
+        Query, Res, ResMut, Resource, Transform, Vec2, With, Without,
     },
-    sprite::collide_aabb::{collide, Collision},
     text::Text,
     time::{Time, Timer},
     utils::HashMap,
@@ -17,6 +18,7 @@ use crate::{
     component::{
         ball::Ball,
         bounding_box::{self, is_completely_inside_bounds, is_inside_bounds, BoundingBox},
+        collide_aabb::{collide, Collision},
         collider::{self, Collider},
         controls::Keyboard,
         paddle::Player,
@@ -69,7 +71,7 @@ pub fn log_game_state(
 
 /// Change the velocity of the paddle based on the player input
 pub fn paddle_input(
-    keys: Res<Input<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
     mut paddle_q: Query<(Entity, &mut Velocity, &Keyboard), With<Player>>,
 ) {
     let mut player_vecs: HashMap<Entity, Vec<Vec2>> = HashMap::new();
@@ -111,13 +113,7 @@ fn check_collision(
     let mut reflect_x = false;
     let mut reflect_y = false;
 
-    collide(
-        collider_tf.translation,
-        collider_tf.scale.truncate(),
-        mover_new_pos.translation,
-        mover_new_pos.scale.truncate(),
-    )
-    .map(|collision| {
+    collide(*collider_tf, *mover_new_pos).map(|collision| {
         match collision {
             Collision::Left => reflect_x = mover_vel.x > 0.0,
             Collision::Right => reflect_x = mover_vel.x < 0.0,
@@ -141,7 +137,7 @@ fn check_collision(
 /// Changes the position of the ball according to its velocity
 pub fn move_ball(mut ball_q: Query<(&mut Transform, &Velocity), With<Ball>>) {
     ball_q.iter_mut().for_each(|(mut tf, vel)| {
-        let scaled_vel = vel.mul(TIME_STEP);
+        let scaled_vel = vel.mul(TIME_STEP as f32); // TODO: dunno if this cast is a good idea
         info!("moving {:?} by {:?}", tf.translation, scaled_vel);
 
         tf.translation.x += scaled_vel.x;
@@ -154,7 +150,7 @@ pub fn move_paddles(
     bounds: Query<(&Transform, &BoundingBox)>,
 ) {
     paddle_q.iter_mut().for_each(|(mut tf, vel, player)| {
-        let scaled_vel = vel.mul(TIME_STEP);
+        let scaled_vel = vel.mul(TIME_STEP as f32); // TODO:
         info!("moving {:?} by {:?}", tf.translation, scaled_vel);
 
         let new_pos = {
@@ -194,12 +190,7 @@ pub fn collide_ball(
     let ball_size = ball_tf.scale.truncate();
 
     for (_, collider_tf, maybe_vel) in &collider_query {
-        if let Some(collision) = collide(
-            ball_tf.translation,
-            ball_size,
-            collider_tf.translation,
-            collider_tf.scale.truncate(),
-        ) {
+        if let Some(collision) = collide(*ball_tf, *collider_tf) {
             debug!(
                 "Collision between {:?} and {:?}: {:?}",
                 ball_tf, collider_tf, collision
@@ -262,7 +253,7 @@ pub fn handle_score_event(
         Query<(&mut Score, &mut Text)>,
     )>,
 ) {
-    if let Some(ev) = ev_score.iter().next() {
+    if let Some(ev) = ev_score.read().next() {
         info!("Scored {:?}", ev);
 
         // Reset ball position
@@ -288,43 +279,48 @@ pub fn handle_score_event(
 
 /// Plays a sound when a collision occurs.
 pub fn collision_sound(
+    mut commands: Commands,
     mut ev_collision: EventReader<collider::Event>,
     asset_server: Res<AssetServer>,
-    audio: Res<Audio>,
 ) {
-    for e in ev_collision.iter() {
+    for e in ev_collision.read() {
         if e.kind != Collision::Inside {
-            let sound = asset_server.load("sound/collision.ogg");
-            audio.play(sound);
+            commands.spawn(AudioBundle {
+                source: asset_server.load("sound/collision.ogg"),
+                settings: PlaybackSettings::ONCE,
+            });
         }
     }
 }
 
-#[derive(Resource)]
-pub struct MusicController(Handle<AudioSink>);
+#[derive(Component)]
+pub struct BackgroundMusic;
 
 pub fn start_background_music(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    audio: Res<Audio>,
-    audio_sinks: Res<Assets<AudioSink>>,
+    audio: Query<&AudioSink, With<BackgroundMusic>>,
 ) {
-    let music = asset_server.load("sound/bgm.ogg");
-    let handle = audio_sinks.get_handle(audio.play(music));
-    commands.insert_resource(MusicController(handle));
+    commands.spawn((
+        AudioBundle {
+            source: asset_server.load("sound/bgm.ogg"),
+            settings: PlaybackSettings {
+                volume: Volume::new(0.5),
+                ..Default::default()
+            },
+        },
+        BackgroundMusic,
+    ));
 }
 
-pub fn stop_background_music(
-    audio_sinks: Res<Assets<AudioSink>>,
-    music_controller: Res<MusicController>,
-) {
-    if let Some(sink) = audio_sinks.get(&music_controller.0) {
-        sink.stop();
-    }
+pub fn stop_background_music(music: Query<&AudioSink, With<BackgroundMusic>>) {
+    music.get_single().map(|m| m.pause());
 }
 
 #[cfg(test)]
 mod test {
+    use bevy::app::Update;
+
     use crate::{
         component::{
             ball,
@@ -342,8 +338,7 @@ mod test {
             setup: |app| {
                 app.add_event::<collider::Event>()
                     .add_event::<shake::Event>()
-                    .add_system(move_ball)
-                    .add_system(collide_ball);
+                    .add_systems(Update, (move_ball, collide_ball));
                 app.world
                     .spawn(Bundle::default().with_position(Vec2::new(10.0, 0.0)));
                 app.world
@@ -372,7 +367,7 @@ mod test {
 
         Test {
             setup: |app| {
-                app.add_system(move_paddles);
+                app.add_systems(Update, move_paddles);
                 let paddle_bundle = paddle::Bundle {
                     velocity: Vec2::new(5.0, 0.0).into(),
                     ..Default::default()
@@ -401,7 +396,7 @@ mod test {
 
         Test {
             setup: |app| {
-                app.add_system(move_paddles);
+                app.add_systems(Update, move_paddles);
                 app.world.spawn(
                     bounding_box::Bundle::default()
                         .with_dimensions(100.0, 100.0)

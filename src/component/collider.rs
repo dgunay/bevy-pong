@@ -1,13 +1,12 @@
-use bevy::{
-    prelude::{Component as BevyComponent, Vec2},
-    sprite::collide_aabb::Collision,
-};
+use bevy::prelude::{Component as BevyComponent, Vec2};
+
+use super::collide_aabb::Collision;
 
 /// A component that indicates that an entity should be treated as collidable.
 #[derive(BevyComponent, Clone, Default, Debug)]
 pub struct Collider;
 
-#[derive(Debug)]
+#[derive(Debug, bevy::ecs::event::Event)]
 /// Event for when a collision happens.
 pub struct Event {
     /// The intensity of the collision. This is the magnitude of the relative

@@ -6,6 +6,7 @@
 
 use self::resources::AspectRatio;
 use bevy::{
+    app::Update,
     prelude::{
         debug, App, Camera2d, DetectChanges, OrthographicProjection, Plugin as BevyPlugin, Query,
         Res, With,
@@ -39,7 +40,7 @@ impl Plugin {
 
 impl BevyPlugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_projection_scale);
+        app.add_systems(Update, update_projection_scale);
         if let Some(aspect_ratio) = self.aspect_ratio {
             app.insert_resource(aspect_ratio);
         }

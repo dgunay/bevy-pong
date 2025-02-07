@@ -45,4 +45,4 @@ pub const BALL_DEFAULT_STARTING_POSITION: Vec2 = Vec2::new(0.0, 0.0);
 // TODO: can we make the ball more like a circle for collision purposes?
 pub const BALL_SCALE: Vec3 = Vec3::new(15.0, 15.0, 15.0);
 
-pub const TIME_STEP: f32 = 1.0 / 60.0;
+pub const TIME_STEP: f64 = 1.0 / 60.0;

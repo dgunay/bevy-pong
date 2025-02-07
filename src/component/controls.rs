@@ -38,20 +38,20 @@ impl Keyboard {
 /// Creates a new `KeyboardControls` with the WASD keys.
 pub const fn wasd() -> Keyboard {
     Keyboard {
-        up: KeyCode::W,
-        down: KeyCode::S,
-        left: KeyCode::A,
-        right: KeyCode::D,
+        up: KeyCode::KeyW,
+        down: KeyCode::KeyS,
+        left: KeyCode::KeyA,
+        right: KeyCode::KeyD,
     }
 }
 
 /// Creates a new `KeyboardControls` with the arrow keys.
 pub const fn arrow_keys() -> Keyboard {
     Keyboard {
-        up: KeyCode::Up,
-        down: KeyCode::Down,
-        left: KeyCode::Left,
-        right: KeyCode::Right,
+        up: KeyCode::ArrowUp,
+        down: KeyCode::ArrowDown,
+        left: KeyCode::ArrowLeft,
+        right: KeyCode::ArrowRight,
     }
 }
 

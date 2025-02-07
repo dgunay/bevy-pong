@@ -9,12 +9,16 @@ fn main() {
             bevy::DefaultPlugins
                 .build()
                 .add_before::<bevy::asset::AssetPlugin, _>(
-                    bevy_embedded_assets::EmbeddedAssetPlugin,
+                    bevy_embedded_assets::EmbeddedAssetPlugin {
+                        ..Default::default()
+                    },
                 ),
         )
-        .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
-        // .add_plugin(WorldInspectorPlugin::default())
-        .add_plugin(bevy_pong::PongPlugin)
+        .add_plugins((
+            LogDiagnosticsPlugin::default(),
+            FrameTimeDiagnosticsPlugin::default(),
+            // WorldInspectorPlugin::default(),
+            bevy_pong::PongPlugin,
+        ))
         .run();
 }

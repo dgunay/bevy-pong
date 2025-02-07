@@ -70,7 +70,6 @@ impl Default for Player {
 /// input, is a Collider, has a Velocity, and includes a Player component.
 #[derive(BevyBundle)]
 pub struct Bundle {
-    #[bundle]
     /// Controls the position and look of the paddle.
     pub sprite: SpriteBundle,
     /// Defines the input controls for the paddle. Used to segregate controls
